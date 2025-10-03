@@ -69,7 +69,7 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 
 ### 5.1 Gantt Chart
 
-[See the document](/main/GanttChart.pdf)
+[See the document](GanttChart.pdf)
 
 ### 5.2 Contributions
 
