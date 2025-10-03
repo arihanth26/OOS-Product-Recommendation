@@ -71,6 +71,14 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 
 ## 6. References
 
-[1] <a name="wavenet"></a>Paper reference in IEEE style
+[1]	A. Grover and J. Leskovec, “node2vec: Scalable feature learning for networks,” KDD, 2016.
+[2]	B. Perozzi, R. Al-Rfou, and S. Skiena, “DeepWalk: Online learning of social representations,” KDD, 2014.
+[3]	C. Burges, “From RankNet to LambdaRank to LambdaMART,” MSR-TR-2010-82, 2010.
+[4]	T. Hoang and E. Breugelmans, “Substitution policies in online grocery,” Journal of Retailing & Consumer Services, 2023.
+[5] H. Gouk and P. Gao, “Automated prior elicitation from large language models for Bayesian logistic regression,” Preprint, 2024. 
+[6] A. Capstick, “LLM-Elicited Priors,” Technical report and demo, 2024. 
+[7] M. A. Riegler, B. S. Pedersen, and H. A. Eskeland, “Using large language models to suggest informative prior distributions,” Scientific Reports, 2025. 
+[8] A. Goulas, A. Mark, and P. G. de Witte, “AutoElicit: Using Large Language Models for Expert Prior Elicitation,” arXiv:2411.17284, 2024. 
+[9] X. Zhang, Z. Liu, and T. Liu, “Adapting LLMs to text ranking with weak supervision,” arXiv:2311.16720v3, 2024. 
+[10] S. Khanduja, S. Raghavan, and A. Doan, “LLM-assisted labeling function generation for semantic type detection,” arXiv:2408.16173, 2024.
 
-[2] <a name="music-gen"></a>Paper reference in IEEE style
