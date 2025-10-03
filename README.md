@@ -28,8 +28,18 @@ citation format - [[1](#wavenet)]
                   [[2](#music-gen)]
 
 ## 3. Methods
-citation format - [[1](#wavenet)]
-                  [[2](#music-gen)]
+###3.1	Data Preprocessing 
+- Product title parsing: brand, type, size/pack
+- Text features: TF–IDF; SBERT sentence embeddings
+-	Alternation graph (within aisle/department)
+-	Down-weighting of same-cart co-occurrences
+-	Graph embeddings: node2vec; DeepWalk
+-	SKU normalization/deduplication (“100% buckets” by brand/type/size)
+-	Unit-size extraction and banded cost-per-unit proxy
+
+###3.2	Unsupervised Learning
+U1: GMM (Maximum Likelihood Estimation): We cluster items with a KKK-component GMM fitted by EM (expectation–maximization), initialized via k-means++ or small randomized responsibilities with a few restarts. We select K by BIC/AIC and stability checks. The resulting soft responsibilities are used directly as ranking features.
+
 
 ## 4. Results and Discussions
 
