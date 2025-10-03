@@ -80,11 +80,6 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 | **Nirmal Francis Xavier** | Problem Statement, Dataset Analysis, Methods, Literature Review, Proposal Report |
 | **Riya Bharathwaj** | Problem Statement, Methods, Presentation, Literature Review, Gantt Chart |
 
-
-Arihanth Jayavijayan
-
-
-
 ## 6. References
 
 [1] <a name="wavenet"></a>Paper reference in IEEE style
