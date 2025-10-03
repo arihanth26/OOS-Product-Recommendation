@@ -14,6 +14,8 @@ The dataset we are using is the Instacart 2017 Market Basket Analysis corpus fro
 ### 2.2 Data gaps and mitigation
 The dataset lacks signals that would strengthen clustering and evaluation. Table 1 summarizes each gap, why it matters, and our workaround.
 
+![Table](images/image.png)
+
 ### 2.3 What Makes Our Project Novel
 
 We build substitutes from an alternation graph (bought instead of) rather than co-purchase, so complements don’t contaminate candidates. We optimize for RBV and acceptance@K, and surface SKUs with weak substitute coverage for planners. On the modeling side, we compare a vanilla GMM to a Bayesian GMM with LLM-elicited NIW priors to stabilize sparse categories. For serving, a k-partite graph collapses near-duplicates into “100% buckets” and routes to next-best clusters only when needed- yielding a sparse, interpretable fallback policy.
