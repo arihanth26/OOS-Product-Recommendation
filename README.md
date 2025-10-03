@@ -73,13 +73,16 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 
 ### 5.2 Contributions
 
-| Name          | Contribution       |
-|---------------|--------------------|
-|               |                    |
-|               |                    |
-|               |                    |
-|               |                    |
-|               |                    |
+| Name | Contribution |
+|-----------------------------------|-------------------------------------------------------------------------------|
+| **Arihanth Jayavijayan** | Problem Statement, Dataset Analysis, Methods, Literature Review, Proposal Report |
+| **Malhar Jadhav** | Problem Statement, Methods, Presentation, Literature Review, Gantt Chart |
+| **Nirmal Francis Xavier** | Problem Statement, Dataset Analysis, Methods, Literature Review, Proposal Report |
+| **Riya Bharathwaj** | Problem Statement, Methods, Presentation, Literature Review, Gantt Chart |
+
+
+Arihanth Jayavijayan
+
 
 
 ## 6. References
