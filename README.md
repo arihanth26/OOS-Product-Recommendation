@@ -71,9 +71,9 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 
 ## 6. References
 
-[1]	A. Grover and J. Leskovec, “node2vec: Scalable feature learning for networks,” KDD, 2016.
-[2]	B. Perozzi, R. Al-Rfou, and S. Skiena, “DeepWalk: Online learning of social representations,” KDD, 2014.
-[3]	C. Burges, “From RankNet to LambdaRank to LambdaMART,” MSR-TR-2010-82, 2010.
+-[1]	A. Grover and J. Leskovec, “node2vec: Scalable feature learning for networks,” KDD, 2016.
+-[2]	B. Perozzi, R. Al-Rfou, and S. Skiena, “DeepWalk: Online learning of social representations,” KDD, 2014.
+-[3]	C. Burges, “From RankNet to LambdaRank to LambdaMART,” MSR-TR-2010-82, 2010.
 [4]	T. Hoang and E. Breugelmans, “Substitution policies in online grocery,” Journal of Retailing & Consumer Services, 2023.
 [5] H. Gouk and P. Gao, “Automated prior elicitation from large language models for Bayesian logistic regression,” Preprint, 2024. 
 [6] A. Capstick, “LLM-Elicited Priors,” Technical report and demo, 2024. 
