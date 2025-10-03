@@ -38,12 +38,12 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 - Text features: TF–IDF; SBERT sentence embeddings
 - Alternation graph (within aisle/department)
 - Down-weighting of same-cart co-occurrences
-	Graph embeddings: node2vec; DeepWalk
-	SKU normalization/deduplication (“100% buckets” by brand/type/size)
-	Unit-size extraction and banded cost-per-unit proxy
+- Graph embeddings: node2vec; DeepWalk
+- SKU normalization/deduplication (“100% buckets” by brand/type/size)
+- Unit-size extraction and banded cost-per-unit proxy
 
 ### 3.2 Unsupervised Learning
-*U1: GMM (Maximum Likelihood Estimation):* We cluster items with a KKK-component GMM fitted by EM (expectation–maximization), initialized via k-means++ or small randomized responsibilities with a few restarts. We select K by BIC/AIC and stability checks. The resulting soft responsibilities are used directly as ranking features.
+**U1: GMM (Maximum Likelihood Estimation):** We cluster items with a KKK-component GMM fitted by EM (expectation–maximization), initialized via k-means++ or small randomized responsibilities with a few restarts. We select K by BIC/AIC and stability checks. The resulting soft responsibilities are used directly as ranking features.
 
 *U2: Bayesian GMM with LLM priors:* To add domain knowledge in sparse categories, we replace the vanilla GMM with a Bayesian GMM whose components have Normal–Inverse–Wishart priors over their means and covariances. We first collapse near-duplicates into “100% buckets” using brand/type/size rules, then prompt a LLM for reasonable prior centers and relative dispersion for each bucket; prior tightness is capped using small empirical samples. The model is fitted with MAP-EM or variational Bayes. If the priors disagree with data (e.g., poor BIC or posterior fit), we anneal toward weak priors or fall back to the vanilla GMM. This typically converges faster and yields cleaner, more stable clusters, improving candidate quality and downstream ranking features.
 
