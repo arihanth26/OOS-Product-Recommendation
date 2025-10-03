@@ -20,7 +20,7 @@ When an item is out of stock (OOS), the order is at risk. We aim to recommend ve
 
 ## 2. Introduction & Background
 ### 2.1 Dataset We Use
-The dataset we are using is the Instacart 2017 Market Basket Analysis corpus from Kaggle ([Link here] (https://www.kaggle.com/datasets/yasserh/instacart-online-grocery-basket-analysis-dataset?utm_source=chatgpt.com)). It contains roughly 3 million orders placed by about 200,000 users over ~50,000 products. 
+The dataset we are using is the Instacart 2017 Market Basket Analysis corpus from Kaggle [Link here] (https://www.kaggle.com/datasets/yasserh/instacart-online-grocery-basket-analysis-dataset?utm_source=chatgpt.com). It contains roughly 3 million orders placed by about 200,000 users over ~50,000 products. 
 
 
 
