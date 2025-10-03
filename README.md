@@ -34,10 +34,10 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 
 ### 3.1 Data Preprocessing
 
-	Product title parsing: brand, type, size/pack
-	Text features: TF–IDF; SBERT sentence embeddings
-	Alternation graph (within aisle/department)
-	Down-weighting of same-cart co-occurrences
+- Product title parsing: brand, type, size/pack
+- Text features: TF–IDF; SBERT sentence embeddings
+- Alternation graph (within aisle/department)
+- Down-weighting of same-cart co-occurrences
 	Graph embeddings: node2vec; DeepWalk
 	SKU normalization/deduplication (“100% buckets” by brand/type/size)
 	Unit-size extraction and banded cost-per-unit proxy
