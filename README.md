@@ -59,10 +59,10 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Optional: freeze exact versions for reproducibility:
+To update requirements
 
 ```bash
-pip freeze > requirements-lock.txt
+pip freeze > requirements-updated.txt
 ```
 
 ### 6. Verify Installation
