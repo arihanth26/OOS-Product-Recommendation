@@ -1,0 +1,28 @@
+numpy>=1.26
+pandas>=2.2
+scipy>=1.11
+
+scikit-learn>=1.4        # GMM, BayesianGaussianMixture, metrics, NearestNeighbors
+lightgbm>=4.3            # LambdaMART (lambdarank objective) for ranking
+xgboost>=2.0             # optional: alternative GBDT ranker (pairwise/listwise)
+
+networkx>=3.2
+karateclub>=1.3.3        # DeepWalk/Node2Vec wrappers
+node2vec>=0.4.6          # alternative node2vec implementation
+gensim>=4.3              # word2vec utils if needed by graph embeddings
+
+sentence-transformers>=2.6.1   # SBERT sentence embeddings
+torch>=2.2.0                   # CPU build is fine; required by sentence-transformers
+
+matplotlib>=3.8
+seaborn>=0.13
+plotly>=5.22
+streamlit>=1.36               # quick project demo / dashboard
+
+ydata-profiling>=4.6           # ex-pandas-profiling
+great-expectations>=0.18       # optional: data validation checks
+
+netcal>=1.3.5                  # ECE/Brier calibration tooling
+
+tqdm>=4.66
+pyyaml>=6.0
