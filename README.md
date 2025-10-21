@@ -78,10 +78,17 @@ Each collaborator must manually download and place the data locally.
 
 ### Create this folder structure:
 ```
-project_root/
+OOS-Product-Recommendation-Engine/
 │
 ├── data/                     # Local data (not in git)
 │   ├── raw/                  # Original datasets
+│       ├── aisles.csv
+│       ├── departments.csv
+│       ├── order_products__prior.csv
+│       ├── order_products__train.csv
+│       ├── orders.csv
+│       ├── products.csv
+│       ├── products_with_prices_ingredients_nutrition.csv
 │   ├── processed/            # Cleaned/transformed data
 │   ├── external/             # Optional APIs or external sources
 │   └── README.txt            # Short note on where the data came from
