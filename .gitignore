@@ -8,4 +8,4 @@ logs/
 *.pth
 *.hdf5
 *.xlsx
-
+.venv/
