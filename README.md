@@ -1,5 +1,5 @@
 # Out-of-Stock Product Recommendation Engine
-When an item is out of stock (OOS), the order is at risk. We aim to recommend very similar substitutes that shoppers accept while preserving basket value, and to flag SKUs with weak substitute coverage for planners.
+This repository contains the code for our CS7641 Machine Learning project. When an item is out of stock (OOS), the order is at risk. We aim to recommend very similar substitutes that shoppers accept while preserving basket value, and to flag SKUs with weak substitute coverage for planners.
 
 ## Setup
 
@@ -70,6 +70,36 @@ pip freeze > requirements-lock.txt
 ```bash
 python -c "import numpy, pandas, sklearn" 
 ```
+
+### 7. Data Directory Setup
+
+** Note:** Data files are not committed to Git for privacy, storage, and reproducibility reasons.  
+Each collaborator must manually download and place the data locally.
+
+### Create this folder structure:
+```
+project_root/
+│
+├── data/                     # Local data (not in git)
+│   ├── raw/                  # Original datasets
+│   ├── processed/            # Cleaned/transformed data
+│   ├── external/             # Optional APIs or external sources
+│   └── README.txt            # Short note on where the data came from
+│
+├── notebooks/                # Jupyter notebooks
+├── src/                      # Python source code
+├── requirements.txt
+├── .gitignore
+└── .venv/
+```
+### The folder `data/` is excluded in `.gitignore`:
+```gitignore
+data/
+!data/sample_*.csv
+```
+This allows small *example/sample data* files to be tracked for demos,  
+while full datasets remain local.
+
 
 ## Usage
 How to run training, notebooks, or Streamlit app.

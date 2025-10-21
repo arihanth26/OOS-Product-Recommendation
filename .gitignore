@@ -9,3 +9,4 @@ logs/
 *.hdf5
 *.xlsx
 .venv/
+!data/sample_*.csv
