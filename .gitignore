@@ -1,0 +1,11 @@
+data/*
+__pycache__/
+.ipynb_checkpoints
+*.nbconvert.ipynb
+logs/
+*.ckpt
+*.pt
+*.pth
+*.hdf5
+*.xlsx
+
