@@ -10,3 +10,4 @@ logs/
 *.xlsx
 .venv/
 !data/sample_*.csv
+notebooks/artifacts/
