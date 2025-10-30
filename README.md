@@ -1,6 +1,11 @@
 # Out-of-Stock Product Recommendation Engine
 This repository contains the code for our CS7641 Machine Learning project. When an item is out of stock (OOS), the order is at risk. We aim to recommend very similar substitutes that shoppers accept while preserving basket value, and to flag SKUs with weak substitute coverage for planners.
 
+## Project Documentation
+1. [Project Proposal](docs/proposal_doc.md) 
+2. [Mid Term Document](./docs/mid_term_doc.md)
+3. [Pre Processing](./docs/data_preprocessing.md)
+
 ## Setup
 
 ### 1. Prerequisites
@@ -113,6 +118,3 @@ How to run training, notebooks, or Streamlit app.
 
 ## Results
 One figure or short description of outcomes.
-
-## Docs
-See [docs/](docs/) for full proposal, midterm, and final reports.
