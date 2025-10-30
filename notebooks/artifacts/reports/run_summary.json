@@ -1,8 +1,0 @@
-{
-  "clusters_k": 48,
-  "covariance_type": "full",
-  "bic": -26680686.85948755,
-  "tiny_component_fraction": 0.0,
-  "n_p1_buckets": 49344,
-  "n_p2_clusters": 48
-}
