@@ -10,7 +10,7 @@ We also surface **Stock Keeping Units (SKUs)** whose best replacements are weak 
 
 ***Reason:*** This dual approach **protects completion** and **retained basket value (RBV)** while simultaneously **informing inventory policy** to prevent future OOS issues.
 
-### 1.1 Dataset We Use
+### 1.2 Dataset We Use
 
 ### Instacart
 
@@ -33,53 +33,6 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 ## 2. Problem Definition
 
 When an item is out of stock (OOS), the order is at risk. We aim to recommend very similar substitutes that shoppers accept while preserving basket value, and to flag SKUs with weak substitute coverage for planners. We will evaluate against aisle-popularity and graph-only baselines using acceptance@K, Normalized Discounted Cumulative Gain (NDCG), Mean Reciprocal Rank (MRR), Retained Basket Value (RBV), coverage, and calibration. Method: build an alternation graph (items bought instead of one another), cluster with a Gaussian Mixture Model (GMM)-comparing a maximum-likelihood version to a Bayesian GMM with Large Language Model (LLM)–elicited Normal–Inverse–Wishart (NIW) priors-then train a personalized ranker using text, taxonomy, graph, and cluster-posterior features; for efficient, interpretable serving, use a k-partite graph that collapses near-duplicates into “100% buckets” and consults next-best clusters only when needed.
-
-## Project Framing
-
-### Business Framing: Maximizing Retained Basket Value (RBV)
-
-When a shopper’s chosen item is **out of stock (OOS)**, the platform risks **cart abandonment** or **value leakage**.
-
-Our objective is to recommend a **replacement list** that maximizes **acceptance** while preserving **order value**, thereby increasing **checkout completion** and **retained basket value (RBV)**.
-
-* **Success Metrics:** Success is measured against strong baselines (aisle popularity, graph-only) using:
-    * **Acceptance@K**
-    * **Normalized Discounted Cumulative Gain (NDCG)**
-    * **Mean Reciprocal Rank (MRR)**
-    * **Retained Basket Value (RBV)**
-    * **Coverage**
-    * **Calibration**
-* **Rationale:** These metrics align directly with **revenue, user experience, and planner actionability.**
-
----
-
-### Technical Framing: Hybrid Unsupervised & Supervised Learning
-
-We employ a hybrid approach utilizing both **unsupervised** and **supervised learning** for replacement recommendation.
-
-#### 1. Unsupervised Learning (Substitute Space Construction):
-
-* We construct a **substitute space** via an **alternation graph** (items bought instead of one another).
-* We cluster this space using a **Gaussian Mixture Model (GMM)**.
-* **Rationale:** Alternation reduces **complement noise** (items frequently bought together but are not substitutes).
-
-#### 2. Supervised Learning (Personalized Ranking):
-
-* We learn a **personalized ranking** over the resulting candidates using a feature set that includes:
-    * **Textual features**
-    * **Taxonomic features**
-    * **Graph features**
-    * **Cluster posterior features**
-
-#### 3. Ablation Study (GMM Comparison):
-
-We ablate **Vanilla GMM** (via Maximum Likelihood Estimation, MLE) versus a **Bayesian GMM** with **Large Language Model (LLM)–elicited Normal–Inverse–Wishart (NIW) priors**.
-
-* **Goal:** To test whether **informative priors** improve cluster purity/stability and downstream acceptance/RBV.
-* **Rationale:** Bayesian priors encode **domain knowledge** where data are sparse, potentially stabilizing the GMM.
-
-
-
 
 ## Methods
 
