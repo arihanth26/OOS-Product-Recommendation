@@ -2,7 +2,6 @@
 
 ## 1. Introduction & Background
 ### 1.1 Dataset We Use
-## 💾 Dataset:
 
 ### Instacart
 
