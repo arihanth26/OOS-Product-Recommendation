@@ -2,13 +2,21 @@
 
 ## 1. Introduction & Background
 ### 1.1 Dataset We Use
-The dataset we are using is the Instacart 2017 Market Basket Analysis corpus from Kaggle [Link here](https://www.kaggle.com/datasets/yasserh/instacart-online-grocery-basket-analysis-dataset?utm_source=chatgpt.com). It contains roughly 3 million orders placed by about 200,000 users over ~50,000 products. 
+## 💾 Dataset:
 
-### 1.2 Data gaps and mitigation
-The dataset lacks signals that would strengthen clustering and evaluation. Table 1 summarizes each gap, why it matters, and our workaround.
+### Instacart
 
-![Table](images/image.png)
+* ***What it is:*** Approximately **3 million orders**, **~200,000 users**, and **~50,000 products** with the core tables `orders`, `order_products_prior,train`, `products`, `aisles`, and `departments`. These allow us to reconstruct shopping sequences and product–aisle relations at scale.
+* ***Public source:*** Instacart 2017 “Market Basket Analysis” (Kaggle): [https://www.kaggle.com/c/instacart-market-basket-analysis](https://www.kaggle.com/c/instacart-market-basket-analysis).
+* ***Why this dataset:*** It is large, reproducible, and widely used for basket modeling, which makes our results comparable and our pipeline easy to evaluate and replicate.
 
+---
+
+### Open Food Facts Dataset
+
+* **What it is:** A large-scale, crowdsourced database of packaged food products collected globally, containing **over 2 million entries** with detailed product-level information including **product name, brand, categories, ingredients, nutritional values, serving size, quantity, and country of sale**. Each record corresponds to a unique barcode (EAN/UPC), enabling linkage across nutrition, ingredient, and category hierarchies.
+* **Public source:** Open Food Facts “Product Database” (Open Data Project): [https://world.openfoodfacts.org/data](https://world.openfoodfacts.org/data)
+* **Why this dataset:** Provides **rich, standardized food and nutrition information** supporting **ingredient-level analysis, nutritional profiling, and product matching** with the Instacart dataset. Its open-source nature and wide coverage make it ideal for our analysis.
 ### 1.3 What Makes Our Project Novel
 
 We build substitutes from an alternation graph (bought instead of) rather than co-purchase, so complements don’t contaminate candidates. We optimize for RBV and acceptance@K, and surface SKUs with weak substitute coverage for planners. On the modeling side, we compare a vanilla GMM to a Bayesian GMM with LLM-elicited NIW priors to stabilize sparse categories. For serving, a k-partite graph collapses near-duplicates into “100% buckets” and routes to next-best clusters only when needed- yielding a sparse, interpretable fallback policy.
