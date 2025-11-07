@@ -136,7 +136,7 @@ The resulting unified dataset harmonized transactional and nutritional dimension
 
 
 
-## 3.2 Unsupervised Learning Implemented
+## 3.2 Unsupervised Machine Learning Model Implemented
 
 ---
 
@@ -191,15 +191,37 @@ The GMM was trained using the **Expectation-Maximization (EM)** algorithm:
 
 ### 4.1 Quantitative Metrics
 
-We will report a comprehensive set of metrics to evaluate ordering quality, business impact, and model reliability:
+### 4.1.1 Silhouette Score
 
-* **Ordering Quality:** **Top-$K$**, **Normalized Discounted Cumulative Gain (NDCG)**, and **Mean Reciprocal Rank (MRR)**.
-* **Business Impact:** **Retained Basket Value (RBV)** (via size/pack bands).
-* **Reliability & Calibration:** **Coverage** and **Calibration** using **Brier score** and **Expected Calibration Error (ECE)**.
-* **Ranking & Probabilistic Models:**
-    * **Ranked Lists:** **Precision@K** and **Recall@K**.
-    * **Probabilistic Acceptance/Edge Models:** **ROC–AUC**, **PR–AUC / Average Precision (AP)**, and **Log Loss**.
- 
+The **Silhouette Score** measures how similar an object is to its own cluster compared to other clusters. It ranges from -1 to 1, where a higher value indicates better-defined clusters. 
+
+The optimal Gaussian Mixture Model (GMM) configuration was achieved through a multi-stage iterative process that analyzed the impact of feature selection and cluster count ($k$) on model performance, primarily measured by the Silhouette Score. 
+
+#### Analysis of Silhouette Score:
+
+* **Using Price Metrics as primary:** GMM with price as the dominant feature yielded a Silhouette Score of **0.07** with 48 clusters, indicating poorly defined groups.
+* **Using Elbow Curve Evaluation:** Using an elbow curve to estimate optimal $k$ led to 48 clusters and a score of **0.41**, showing moderate improvement.
+* **Using Ingredient Features from OpenFoodFacts dataset:** Incorporating additional ingredient and nutrition features from the OpenFoodFacts dataset and performing TF-IDF + SVD feature extraction produced significantly better clusters.
+
+Using AIC/BIC and elbow methods, the optimal number of clusters was determined as **$k = 96$**, resulting in a **Silhouette Score of 0.73**, indicating well-separated and coherent clusters.
+
+Functions like `suggest_optimal_k` and `plot_elbow_and_metrics` were developed to automate and visualize the process of selecting the optimal number of clusters.
+
+### 4.1.2 AIC and BIC
+
+The **Akaike Information Criterion (AIC)** and **Bayesian Information Criterion (BIC)** were employed to assess model quality and penalize overfitting.
+
+* Both metrics balance model fit (log-likelihood) and model complexity (number of parameters).
+* A **lower AIC/BIC** value corresponds to a better model.
+
+The BIC curve showed a clear minimum near **$k = 96$**, aligning with the silhouette results, confirming the model's optimal complexity.
+
+### 4.1.3 Davies–Bouldin (DB) Index
+
+The **DB index** quantifies cluster separation and compactness, where **lower values ($<1$)** indicate well-separated clusters. 
+
+At **$k = 96$**, the DB index was observed to be below 1, further validating the quality of clustering.
+
 
 ### 4.2 Vizualization
 
