@@ -36,7 +36,7 @@ When an item is out of stock (OOS), the order is at risk. We aim to recommend ve
 
 ## 3. Methods
 
-### Data Preprocessing and Integration
+### 3.1 Data Preprocessing and Integration
 
 This section describes how we preprocessed and combined **Instacart grocery products (Kaggle)** with **OpenFoodFacts** ingredient and nutrition data, producing a unified table that aligns retail and compositional attributes. The preprocessing required extensive normalization and entity matching across two heterogeneous datasets that lacked a common identifier such as barcode or SKU.
 
