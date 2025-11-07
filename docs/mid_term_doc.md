@@ -114,7 +114,7 @@ The integrated dataset contained:
 The resulting unified dataset harmonized transactional and nutritional dimensions of grocery products, supporting downstream clustering for nutritional profiling, ingredient analysis, and diet-aware recommendation modeling. The pipeline is fully reproducible and generalizable to other retail–nutrition integration tasks.
 
 
-## Unsupervised Learning
+## 3.2 Unsupervised Learning
 
 ---
 
