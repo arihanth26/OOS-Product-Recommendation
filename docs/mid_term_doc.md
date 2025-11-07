@@ -265,7 +265,7 @@ An individual drill-down visualization for a particular cluster in this $k$-part
 
 
 
-![plot](../images/individual_cluster_graph.png))
+![plot](../images/individual_cluster_graph.png)
 *Figure: Hierarchical Drill-Down: Products in Cluster 44 (Aisle: water seltzer sparkling water).*
 
 This visual network provides an intuitive way to explore substitution relationships and product proximity within and across aisles, which is critical for the supervised learning algorithm and substitution ranking.
