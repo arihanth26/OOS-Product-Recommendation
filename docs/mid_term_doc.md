@@ -30,6 +30,16 @@ We also surface **Stock Keeping Units (SKUs)** whose best replacements are weak 
 
 We build substitutes from an alternation graph (bought instead of) rather than co-purchase, so complements don’t contaminate candidates. We optimize for RBV and acceptance@K, and surface SKUs with weak substitute coverage for planners. On the modeling side, we compare a vanilla GMM to a Bayesian GMM with LLM-elicited NIW priors to stabilize sparse categories. For serving, a k-partite graph collapses near-duplicates into “100% buckets” and routes to next-best clusters only when needed- yielding a sparse, interpretable fallback policy.
 
+
+### 1.3 Literature Survey
+
+* **node2vec** (Grover & Leskovec, 2016). This method introduces a flexible, biased **random walk** procedure to learn low-dimensional vector representations (embeddings) of nodes in graphs. It is valuable because it can capture both local neighborhood structure and broader community structure, making it ideal for retrieval tasks like finding similar **substitute items** ("items on a map" style retrieval).
+* **DeepWalk** (Perozzi et al., 2014). An earlier, foundational method that uses standard uniform **random walks** to embed graph nodes. It paved the way for modern graph representation learning and is crucial for creating robust **product-graph embeddings** that capture item-to-item relatedness based on co-occurrence in shopper baskets.
+* **Learning to Rank / LambdaMART** (Burges, 2010). This is a core **boosted tree ranking** approach derived from Microsoft Research. It optimizes directly for ranking metrics like **NDCG** by treating the gradient as the change in the ranking metric (the "lambda"). It is the standard-bearer for supervised ranking in search and recommendation systems due to its high performance and feature handling capabilities.
+* **Substitution Policies in Online Grocery** (Hoang & Breugelmans, 2023). This work focuses specifically on how different retailer **substitution rules** (e.g., brand-only, size-up) affect customer acceptance and value perception in grocery retail. This motivates the project's goal of optimizing the recommendation engine to maximize **acceptance** and **Retained Basket Value (RBV)**, rather than just raw prediction accuracy.
+* **LLM-Prior** (Huang, 2025). This emerging technique automates **Bayesian prior elicitation** by leveraging large language models (LLMs). The LLM is used to translate unstructured **product context** (descriptions, categories, brand history) into structured **Normal-Inverse-Wishart (NIW) hyperparameters** for the Bayesian GMM. This allows us to inject crucial domain knowledge into the clustering process, especially when training data is sparse.
+
+
 ## 2. Problem Definition
 
 ### 2.1 Problem
