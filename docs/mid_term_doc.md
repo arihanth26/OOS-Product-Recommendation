@@ -112,3 +112,169 @@ The integrated dataset contained:
 
 ### Outcome
 The resulting unified dataset harmonized transactional and nutritional dimensions of grocery products, supporting downstream clustering for nutritional profiling, ingredient analysis, and diet-aware recommendation modeling. The pipeline is fully reproducible and generalizable to other retail–nutrition integration tasks.
+
+
+## Unsupervised Learning
+
+---
+
+### U1: Gaussian Mixture Model (GMM) via Maximum Likelihood Estimation (MLE)
+
+We cluster items using a **$K$-component GMM** (a probabilistic clustering model that assigns each item a soft membership over components) fitted with **expectation–maximization, EM** (an iterative procedure that alternates between computing posterior memberships and re-estimating parameters).
+
+* **Initialization:** We initialize with **k-means++** or small randomized $1/K$ responsibilities and keep **three restarts** to reduce sensitivity to local optima.
+* **Component Selection ($K$):** The number of components $K$ is selected using **Bayesian/Akaike criteria (BIC/AIC)** and **cluster stability**.
+* **Benefit:** This baseline provides **well-calibrated posterior responsibilities** that become strong, low-leakage features for ranking.
+
+---
+
+### U2: Bayesian GMM with Large Language Model (LLM)–suggested Normal–Inverse–Wishart (NIW) priors
+
+To inject domain knowledge where data are sparse, we replace uninformative MLE with a **Bayesian GMM** in which each component $(\mu,\Sigma)$ follows an **NIW prior** (a conjugate prior over Gaussian means and covariances).
+
+#### Key Steps:
+1.  **Near-Duplicate Grouping:** We first group near-duplicates into “100\% buckets’’ using brand/type/size rules.
+2.  **Prior Elicitation:** We then elicit **hyperparameters** from an **LLM**: expected centers $\mu_{0}$ and relative dispersion $(\kappa_{0},\nu_{0},\Psi_{0})$.
+3.  **Prior Tightness Cap:** We cap prior tightness using small empirical samples to prevent over-constraint.
+4.  **Model Fitting:** We fit the model with **maximum a posteriori (MAP) EM** or **variational Bayes** (Bayesian optimizers that add prior terms to EM).
+
+#### Conflict Resolution:
+* If priors conflict with evidence (e.g., poor BIC/posterior fit), we **anneal toward weak NIW** or **revert to U1**.
+
+#### Benefit:
+* This approach typically yields **faster convergence** and **cleaner substitute clusters**, improving both candidate quality and features for the supervised stage.
+
+## Unsupervised Learning
+
+---
+
+### U1: Gaussian Mixture Model (GMM) via Maximum Likelihood Estimation (MLE)
+
+We cluster items using a **$K$-component GMM** (a probabilistic clustering model that assigns each item a soft membership over components) fitted with **expectation–maximization, EM** (an iterative procedure that alternates between computing posterior memberships and re-estimating parameters).
+
+* **Initialization:** We initialize with **k-means++** or small randomized $1/K$ responsibilities and keep **three restarts** to reduce sensitivity to local optima.
+* **Component Selection ($K$):** The number of components $K$ is selected using **Bayesian/Akaike criteria (BIC/AIC)** and **cluster stability**.
+* **Benefit:** This baseline provides **well-calibrated posterior responsibilities** that become strong, low-leakage features for ranking.
+
+---
+
+### U2: Bayesian GMM with Large Language Model (LLM)–suggested Normal–Inverse–Wishart (NIW) priors
+
+To inject domain knowledge where data are sparse, we replace uninformative MLE with a **Bayesian GMM** in which each component $(\mu,\Sigma)$ follows an **NIW prior** (a conjugate prior over Gaussian means and covariances).
+
+#### Key Steps:
+1.  **Near-Duplicate Grouping:** We first group near-duplicates into “100\% buckets’’ using brand/type/size rules.
+2.  **Prior Elicitation:** We then elicit **hyperparameters** from an **LLM**: expected centers $\mu_{0}$ and relative dispersion $(\kappa_{0},\nu_{0},\Psi_{0})$.
+3.  **Prior Tightness Cap:** We cap prior tightness using small empirical samples to prevent over-constraint.
+4.  **Model Fitting:** We fit the model with **maximum a posteriori (MAP) EM** or **variational Bayes** (Bayesian optimizers that add prior terms to EM).
+
+#### Conflict Resolution:
+* If priors conflict with evidence (e.g., poor BIC/posterior fit), we **anneal toward weak NIW** or **revert to U1**.
+
+#### Benefit:
+* This approach typically yields **faster convergence** and **cleaner substitute clusters**, improving both candidate quality and features for the supervised stage.
+
+---
+
+## Method Comparison
+
+| Method | Role & Reason | Risk | Mitigation |
+| :--- | :--- | :--- | :--- |
+| **U1: GMM (MLE)** | Fast baseline; soft features | Local optima | Restarts; BIC/AIC; stability |
+| **U2: Bayes GMM + LLM NIW** | Encodes domain; tighter buckets | Prior mis-spec | Anneal priors; fallback to U1 |
+| **S1: LambdaMART/GBDT** | Personalization; RBV-aware | Label noise | 7/14/28-day sensitivity; calibration |
+| **S2: k-partite graph** | Sparse, interpretable fallback | Over-pruning | Tune by RBV/coverage trade-off |
+
+---
+
+## Next Steps
+
+### 1. Strengthening the Clustering Foundation
+
+* **Re-clustering:** Re-cluster with a **Bayesian GMM** using **LLM-elicited–Normal–Inverse–Wishart (NIW) priors**.
+* **Benchmarking:** Benchmark against the **MLE GMM** using the following metrics:
+    * Log-likelihood/BIC or ELBO
+    * Silhouette
+    * Bootstrap stability
+    * Purity vs. near-duplicate buckets and alternation constraints
+
+### 2. Finalizing the Out-of-Stock (OOS) Replay Simulator
+
+The simulator will use the following logic to create substitute labels:
+
+* **Process:** Remove item $i$ from historical baskets, surface candidates from the **$k$-partite graph**, and label accepted if a substitute is purchased while $i$ is not repurchased within 7/14/28 days.
+* **Time Split:** Time-split by order date and keep users **disjoint** across train/validation/test to avoid leakage.
+
+### 3. Supervised Learning & Model Selection
+
+* **Rankers:** Compare **LightGBM–LambdaMART** and **XGBoost** (pairwise/listwise ranking).
+* **Features:** Use features from:
+    * Text/taxonomy
+    * Unit-value gaps
+    * Shopper/basket context
+    * Graph distances
+    * **GMM responsibilities** (crucial cluster features)
+* **Selection:** Model selection will use **nested cross-validation** with early stopping and **Bayesian hyper-parameter search**.
+
+### 4. Offline Evaluation Metrics
+
+We will report the following metrics with department-level breakdowns and **95\% bootstrap confidence intervals**:
+
+* Top-$K$, NDCG@$K$ (Normalized Discounted Cumulative Gain), MRR (Mean Reciprocal Rank), Precision@$K$, Recall@$K$
+* **Retained Basket Value (RBV)**, Coverage
+* Probability calibration (Brier score and Expected Calibration Error)
+* **Ablation Studies:** MLE vs. Bayesian GMM; ranker with/without cluster features; unconstrained vs. $k$-partite graph.
+
+### 5. Efficiency and Sustainability
+
+* **Efficiency Reads:** Log training/refresh time, inference latency, and candidate fan-out/edge count.
+* **Sustainability:** Log hardware/runtime counters (CPU
+
+## Potential Results and Discussion
+
+---
+
+### Metrics
+
+We will report a comprehensive set of metrics to evaluate ordering quality, business impact, and model reliability:
+
+* **Ordering Quality:** **Top-$K$**, **Normalized Discounted Cumulative Gain (NDCG)**, and **Mean Reciprocal Rank (MRR)**.
+* **Business Impact:** **Retained Basket Value (RBV)** (via size/pack bands).
+* **Reliability & Calibration:** **Coverage** and **Calibration** using **Brier score** and **Expected Calibration Error (ECE)**.
+* **Ranking & Probabilistic Models:**
+    * **Ranked Lists:** **Precision@K** and **Recall@K**.
+    * **Probabilistic Acceptance/Edge Models:** **ROC–AUC**, **PR–AUC / Average Precision (AP)**, and **Log Loss**.
+
+### Expected Improvements
+
+We anticipate the following performance gains over aisle-popularity or graph-only baselines:
+
+* **Ordering Quality:** Target a **+5–10\% improvement in NDCG@5** and similar gain in MRR.
+* **Bayesian GMM:** The **Bayesian Gaussian Mixture Model (GMM)** with Large Language Model (LLM)–elicited **Normal–Inverse–Wishart (NIW) priors** should yield **cleaner, more stable clusters** than Maximum-Likelihood GMM.
+* **Candidate Generation:** The **$k$-partite graph** is expected to maintain **Retained Basket Value (RBV)** while achieving **fewer edges and lower fan-out**.
+
+
+
+### Ablation Studies
+
+We will conduct ablations to isolate the contribution of key components. All experiments will use identical out-of-stock (OOS) replay windows (7/14/28 days):
+
+1.  **Clustering Method:** **Vanilla GMM** vs. **Bayesian GMM (LLM priors)**.
+2.  **Feature Impact:** Ranker **without** vs. **with cluster-posterior features**.
+3.  **Candidate Generator:** **Unconstrained** vs. **$k$-partite graph**.
+
+### Sustainability and Efficiency
+
+Focusing on efficiency yields both cost and environmental benefits:
+
+* **Sustainability:** Better first-shot acceptance reduces corrections/re-deliveries and potential spoilage.
+* **Efficiency:** Using a **graph-based candidate generator** (alternation + node2vec/DeepWalk) with a **Gradient-Boosted Decision-Tree (GBDT) ranker** is lighter than large SVD pipelines, cutting **training/refresh time and energy**.
+* **Reporting:** We will report **runtimes** and, where feasible, **estimated energy** usage.
+
+### Risks and Mitigation
+
+| Risk | Mitigation Strategy |
+| :--- | :--- |
+| **Over-tight LLM priors** | Anneal to **weak NIW** or fall back to **MLE**. |
+| **Sparse $k$-partite edges** | Retune on the **RBV–Coverage frontier**. |
+| **Probability drift** | Apply **post-hoc calibration** (e.g., Platt Scaling or Isotonic Regression). |
