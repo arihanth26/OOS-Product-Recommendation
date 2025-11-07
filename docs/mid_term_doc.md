@@ -194,5 +194,5 @@ With the baseline GMM, $k$-partite graph, and evaluation harness in place, the n
 
 ## 7. Gnatt Chart
 
-[See the document](./docs/Midterm_Gantt_Chart.xlsx)
+[See the document](../docs/Midterm_Gantt_Chart.xlsx)
 
