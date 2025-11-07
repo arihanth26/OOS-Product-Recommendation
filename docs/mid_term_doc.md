@@ -48,7 +48,9 @@ When an item is out of stock (OOS), the order is at risk. We aim to recommend ve
 
 ### 2.2 Motivation
 
+The motivation is rooted in mitigating the significant financial and customer experience costs associated with **Out-of-Stock (OOS)** items in online grocery. When an expected item is unavailable, customers face friction and often abandon their entire order or seek substitutes that diminish the **basket value (RBV)**. 
 
+By developing a sophisticated, multi-stage engine—combining **Bayesian GMM clustering** informed by LLM priors and a **LambdaMART ranker**—we aim to dramatically boost **acceptance@K** and preserve profitability. Furthermore, identifying SKUs with poor substitute coverage provides essential, actionable signals for **inventory planning**, transforming a customer service challenge into a targeted logistics optimization opportunity.
 
 ## 3. Methods
 
