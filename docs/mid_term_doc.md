@@ -1,16 +1,29 @@
 # Out-of-Stock Product Recommendation Engine
 
-## 1. Introduction & Background
 
-## 1.1 Goal
+## 1. Problem Definition
 
-When a shopper’s item is **out-of-stock (OOS)**, we must suggest a ***good replacement*** so they still check out and we retain order value. 
+### 1.1 Problem
 
-We also surface **Stock Keeping Units (SKUs)** whose best replacements are weak so planners can stock those deeper.
+When an item is out of stock (OOS), the order is at risk. We aim to recommend very similar substitutes that shoppers accept while preserving basket value, and to flag SKUs with weak substitute coverage for planners. We will evaluate against aisle-popularity and graph-only baselines using acceptance@K, Normalized Discounted Cumulative Gain (NDCG), Mean Reciprocal Rank (MRR), Retained Basket Value (RBV), coverage, and calibration. Method: build an alternation graph (items bought instead of one another), cluster with a Gaussian Mixture Model (GMM)-comparing a maximum-likelihood version to a Bayesian GMM with Large Language Model (LLM)–elicited Normal–Inverse–Wishart (NIW) priors-then train a personalized ranker using text, taxonomy, graph, and cluster-posterior features; for efficient, interpretable serving, use a k-partite graph that collapses near-duplicates into “100% buckets” and consults next-best clusters only when needed.
+
+### 1.2 Motivation
+
+The motivation is rooted in mitigating the significant financial and customer experience costs associated with **Out-of-Stock (OOS)** items in online grocery. When an expected item is unavailable, customers face friction and often abandon their entire order or seek substitutes that diminish the **basket value (RBV)**. 
+
+By developing a sophisticated, multi-stage engine—combining **Bayesian GMM clustering** informed by LLM priors and a **LambdaMART ranker**—we aim to dramatically boost **acceptance@K** and preserve profitability. Furthermore, identifying SKUs with poor substitute coverage provides essential, actionable signals for **inventory planning**, transforming a customer service challenge into a targeted logistics optimization opportunity.
+
+
+
+## 2. Introduction & Background
+
+## 2.1 Goal
+
+When a shopper’s item is **out-of-stock (OOS)**, we must suggest a ***good replacement*** so they still check out and we retain order value. We also surface **Stock Keeping Units (SKUs)** whose best replacements are weak so planners can stock those deeper.
 
 ***Reason:*** This dual approach **protects completion** and **retained basket value (RBV)** while simultaneously **informing inventory policy** to prevent future OOS issues.
 
-### 1.2 Dataset Description
+### 2.2 Dataset Description
 
 ### Instacart
 
@@ -26,12 +39,12 @@ We also surface **Stock Keeping Units (SKUs)** whose best replacements are weak 
 * **Public source:** Open Food Facts “Product Database” (Open Data Project): [https://world.openfoodfacts.org/data](https://world.openfoodfacts.org/data)
 * **Why this dataset:** Provides **rich, standardized food and nutrition information** supporting **ingredient-level analysis, nutritional profiling, and product matching** with the Instacart dataset. Its open-source nature and wide coverage make it ideal for our analysis.
   
-### 1.3 What Makes Our Project Novel
+### 2.3 What Makes Our Project Novel
 
 We build substitutes from an alternation graph (bought instead of) rather than co-purchase, so complements don’t contaminate candidates. We optimize for RBV and acceptance@K, and surface SKUs with weak substitute coverage for planners. On the modeling side, we compare a vanilla GMM to a Bayesian GMM with LLM-elicited NIW priors to stabilize sparse categories. For serving, a k-partite graph collapses near-duplicates into “100% buckets” and routes to next-best clusters only when needed- yielding a sparse, interpretable fallback policy.
 
 
-### 1.3 Literature Survey
+### 2.4 Literature Survey
 
 * **node2vec** (Grover & Leskovec, 2016). This method introduces a flexible, biased **random walk** procedure to learn low-dimensional vector representations (embeddings) of nodes in graphs. It is valuable because it can capture both local neighborhood structure and broader community structure, making it ideal for retrieval tasks like finding similar **substitute items** ("items on a map" style retrieval).
 * **DeepWalk** (Perozzi et al., 2014). An earlier, foundational method that uses standard uniform **random walks** to embed graph nodes. It paved the way for modern graph representation learning and is crucial for creating robust **product-graph embeddings** that capture item-to-item relatedness based on co-occurrence in shopper baskets.
@@ -40,17 +53,7 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 * **LLM-Prior** (Huang, 2025). This emerging technique automates **Bayesian prior elicitation** by leveraging large language models (LLMs). The LLM is used to translate unstructured **product context** (descriptions, categories, brand history) into structured **Normal-Inverse-Wishart (NIW) hyperparameters** for the Bayesian GMM. This allows us to inject crucial domain knowledge into the clustering process, especially when training data is sparse.
 
 
-## 2. Problem Definition
 
-### 2.1 Problem
-
-When an item is out of stock (OOS), the order is at risk. We aim to recommend very similar substitutes that shoppers accept while preserving basket value, and to flag SKUs with weak substitute coverage for planners. We will evaluate against aisle-popularity and graph-only baselines using acceptance@K, Normalized Discounted Cumulative Gain (NDCG), Mean Reciprocal Rank (MRR), Retained Basket Value (RBV), coverage, and calibration. Method: build an alternation graph (items bought instead of one another), cluster with a Gaussian Mixture Model (GMM)-comparing a maximum-likelihood version to a Bayesian GMM with Large Language Model (LLM)–elicited Normal–Inverse–Wishart (NIW) priors-then train a personalized ranker using text, taxonomy, graph, and cluster-posterior features; for efficient, interpretable serving, use a k-partite graph that collapses near-duplicates into “100% buckets” and consults next-best clusters only when needed.
-
-### 2.2 Motivation
-
-The motivation is rooted in mitigating the significant financial and customer experience costs associated with **Out-of-Stock (OOS)** items in online grocery. When an expected item is unavailable, customers face friction and often abandon their entire order or seek substitutes that diminish the **basket value (RBV)**. 
-
-By developing a sophisticated, multi-stage engine—combining **Bayesian GMM clustering** informed by LLM priors and a **LambdaMART ranker**—we aim to dramatically boost **acceptance@K** and preserve profitability. Furthermore, identifying SKUs with poor substitute coverage provides essential, actionable signals for **inventory planning**, transforming a customer service challenge into a targeted logistics optimization opportunity.
 
 ## 3. Methods
 
@@ -137,23 +140,48 @@ The resulting unified dataset harmonized transactional and nutritional dimension
 
 ---
 
-### U1: Gaussian Mixture Model (GMM) via Maximum Likelihood Estimation (MLE):
+### Gaussian Mixture Model (GMM) via Maximum Likelihood Estimation (MLE):
 
 We cluster items using a **$K$-component GMM** (a probabilistic clustering model that assigns each item a soft membership over components) fitted with **expectation–maximization, EM** (an iterative procedure that alternates between computing posterior memberships and re-estimating parameters). We initialize with k-means++ or small randomized $1/K$ responsibilities and keep three restarts to reduce sensitivity to local optima. The number of components $K$ is selected using Bayesian/Akaike criteria (BIC/AIC) and cluster stability. This baseline provides well-calibrated posterior responsibilities that become strong, low-leakage features for ranking.
 
-### U2: Bayesian GMM with Large Language Model (LLM)–suggested Normal–Inverse–Wishart (NIW) priors:
+### 3.3 GMM Implementation
 
-To inject domain knowledge where data are sparse, we replace uninformative MLE with a **Bayesian GMM** in which each component $(\mu,\Sigma)$ follows an **NIW prior** (a conjugate prior over Gaussian means and covariances). We first group near-duplicates into “100\% buckets’’ using brand/type/size rules and then elicit hyperparameters from an LLM: expected centers $\mu_{0}$ and relative dispersion $(\kappa_{0},\nu_{0},\Psi_{0})$. We cap prior tightness using small empirical samples to prevent over-constraint. We fit the model with **maximum a posteriori (MAP) EM** or **variational Bayes** (Bayesian optimizers that add prior terms to EM). If priors conflict with evidence (e.g., poor BIC/posterior fit), we anneal toward weak NIW or revert to U1. This approach typically yields faster convergence and cleaner substitute clusters, improving both candidate quality and features for the supervised stage.
+---
+## Feature Engineering
 
+Before clustering, the pipeline performed extensive **feature engineering** to transform raw product data into a vector space that the Gaussian Mixture Model (GMM) could effectively process:
 
-## 3.3 Method Comparison
+### Product Bucketing
+* **Product Layer (P0 & P1):** Products were first grouped into granular buckets (**P1 Buckets**) based on high similarity in name ($\ge 0.92$) and a tight tolerance for the price variable ($\le 10\%$). This ensures that the clustering algorithm works with averaged, highly representative product units rather than raw, noisy product data. The function `make_buckets` was used for this implementation.
 
-| Method | Role & Reason | Risk | Mitigation |
-| :--- | :--- | :--- | :--- |
-| **U1: GMM (MLE)** | Fast baseline; soft features | Local optima | Restarts; BIC/AIC; stability |
-| **U2: Bayes GMM + LLM NIW** | Encodes domain; tighter buckets | Prior mis-spec | Anneal priors; fallback to U1 |
-| **S1: LambdaMART/GBDT** | Personalization; RBV-aware | Label noise | 7/14/28-day sensitivity; calibration |
-| **S2: k-partite graph** | Sparse, interpretable fallback | Over-pruning | Tune by RBV/coverage trade-off |
+### Feature Vectors
+Each bucket was represented by a high-dimensional feature vector combining three critical aspects:
+
+* **Text/Sensory:** Features derived from **TF-IDF** and **Truncated SVD** on product names and ingredient lists (capturing type, flavor, and quality cues).
+* **Price:** The Robust-Scaled `PRICE_PER_100G` (capturing value segment).
+* **Category:** **One-Hot Encoded** representations of the product's aisle (capturing context).
+
+### Dimensionality Reduction
+* A final **Truncated SVD (PCA)** was applied to this combined vector to create the **96-dimensional input** for the GMM, ensuring the model focuses on the most significant variance in the data. This gave the input matrix for the GMM algorithm to train on, and is implemented in the `average_by_bucket` function.
+
+---
+
+## Training: Gaussian Mixture Model (GMM)
+
+A **Gaussian Mixture Model (GMM)** was employed to perform **soft clustering**, which allows each product to have a probabilistic membership across multiple clusters. This is a suitable choice for substitution modeling where a product may belong to more than one potential substitute group. A custom function, `sweep_gmm_metrics()`, was used to train multiple GMMs across different cluster counts ($k$ values) and compute performance metrics such as **AIC**, **BIC**, **Silhouette**, and **Davies–Bouldin (DB)** scores.
+
+The parameter `tiny_frac` was set to a low value to ensure finer cluster resolution without overfitting.
+
+### GMM Cluster Characteristics
+Each GMM cluster is characterized by:
+* **Mean ($\mu$):** Represents the centroid or center of the cluster in the feature space.
+* **Covariance ($\Sigma$):** Describes the shape and orientation of the cluster. A **full covariance matrix** was used, enabling flexible, non-spherical cluster boundaries to fit complex data distributions.
+* **Mixing Weight ($\pi$):** Represents the probability that a randomly selected product belongs to that cluster.
+
+### Training Algorithm
+The GMM was trained using the **Expectation-Maximization (EM)** algorithm:
+* **E-step:** Compute the responsibilities, i.e., the probability that each product belongs to each cluster.
+* **M-step:** Update the parameters (means, covariances, and mixing weights) to maximize the likelihood of observing the given data.
 
 ---
 
