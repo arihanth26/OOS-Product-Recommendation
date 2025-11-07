@@ -223,8 +223,52 @@ The **DB index** quantifies cluster separation and compactness, where **lower va
 At **$k = 96$**, the DB index was observed to be below 1, further validating the quality of clustering.
 
 
+
+**Figure 1: GMM Model Selection and Cluster Visualization: Optimal $k=96$ determined by BIC, Silhouette, and Davies-Bouldin metrics.**
+
+[GMM Evaluation Plot showing optimal k=96]
+
+
 ### 4.2 Vizualization
 
+## Visualization and K-Partite Graph Construction
+
+To interpret and operationalize the clustering results, a **$k$-partite graph** was constructed to represent relationships across three levels of abstraction:
+
+* **P1 Nodes:** Represent product buckets grouped by name similarity.
+* **P2 Nodes:** Represent cluster centroids from the GMM (i.e., each P2 node is a product cluster in feature space).
+* **P3 Nodes:** Represent aisles or higher-level product categories.
+
+The $k$-partite graph was created using the `build_kpartite_graph` function, which connects these nodes based on their relationships.
+
+### Graph Edges
+The function creates the following connections:
+
+* **P1 $\to$ P2:** Connect product buckets to their respective GMM clusters.
+* **P2 $\to$ P3:** Link each cluster to its corresponding aisle.
+* **P2 $\to$ P2:** Capture inter-cluster relationships based on **cosine similarity** between cluster centroids, identifying clusters that share similar product compositions.
+
+### Visualization
+
+The graph was visualized using the `networkx` library:
+
+* **P3 Nodes (Light Green):** Represent aisles.
+* **P2 Nodes (Dark Green):** Represent GMM clusters (P2), numbered from 1–96.
+* **P2–P2 edges:** Depict inter-cluster mappings, emphasizing similarity scores between clusters.
+
+
+
+*Figure: Overall Substitution K-Partite Graph with Aisles, Clusters and P2-P2 Mappings.*
+
+An individual drill-down visualization for a particular cluster in this $k$-partite graph can be seen below:
+
+
+
+*Figure: Hierarchical Drill-Down: Products in Cluster 44 (Aisle: water seltzer sparkling water).*
+
+This visual network provides an intuitive way to explore substitution relationships and product proximity within and across aisles, which is critical for the supervised learning algorithm and substitution ranking.
+
+---
 
 ### 4.3 Analysis of Algorithm
 
