@@ -10,7 +10,7 @@ We also surface **Stock Keeping Units (SKUs)** whose best replacements are weak 
 
 ***Reason:*** This dual approach **protects completion** and **retained basket value (RBV)** while simultaneously **informing inventory policy** to prevent future OOS issues.
 
-### 1.2 Dataset We Use
+### 1.2 Dataset Description
 
 ### Instacart
 
@@ -32,11 +32,17 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 
 ## 2. Problem Definition
 
+### 2.1 Problem
+
 When an item is out of stock (OOS), the order is at risk. We aim to recommend very similar substitutes that shoppers accept while preserving basket value, and to flag SKUs with weak substitute coverage for planners. We will evaluate against aisle-popularity and graph-only baselines using acceptance@K, Normalized Discounted Cumulative Gain (NDCG), Mean Reciprocal Rank (MRR), Retained Basket Value (RBV), coverage, and calibration. Method: build an alternation graph (items bought instead of one another), cluster with a Gaussian Mixture Model (GMM)-comparing a maximum-likelihood version to a Bayesian GMM with Large Language Model (LLM)–elicited Normal–Inverse–Wishart (NIW) priors-then train a personalized ranker using text, taxonomy, graph, and cluster-posterior features; for efficient, interpretable serving, use a k-partite graph that collapses near-duplicates into “100% buckets” and consults next-best clusters only when needed.
+
+### 2.2 Motivation
+
+
 
 ## 3. Methods
 
-### 3.1 Data Preprocessing and Integration
+### 3.1 Data Preprocessing Implemented 
 
 This section describes how we preprocessed and combined **Instacart grocery products (Kaggle)** with **OpenFoodFacts** ingredient and nutrition data, producing a unified table that aligns retail and compositional attributes. The preprocessing required extensive normalization and entity matching across two heterogeneous datasets that lacked a common identifier such as barcode or SKU.
 
@@ -115,7 +121,7 @@ The resulting unified dataset harmonized transactional and nutritional dimension
 
 
 
-## 3.2 Unsupervised Learning
+## 3.2 Unsupervised Learning Implemented
 
 ---
 
@@ -139,7 +145,7 @@ To inject domain knowledge where data are sparse, we replace uninformative MLE w
 
 ---
 
-## 4. Potential Results and Discussion
+## 4. Results and Discussion
 
 ---
 
