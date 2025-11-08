@@ -220,7 +220,7 @@ The BIC curve showed a clear minimum near **$k = 96$**, aligning with the silhou
 
 The **DB index** quantifies cluster separation and compactness, where **lower values ($<1$)** indicate well-separated clusters. 
 
-At **$k = 96$**, the DB index was observed to be below 1, further validating the quality of clustering.
+At **$k = 96$**, the DB index was observed to be 0.8, further validating the quality of clustering.
 
 
 
@@ -307,5 +307,6 @@ With the baseline GMM, $k$-partite graph, and evaluation harness in place, the n
 
 ## 7. Gantt Chart
 
+![plot](../images/Gantt_Image.png)
 [See the document](../docs/Midterm_Gantt_Chart.xlsx)
 
