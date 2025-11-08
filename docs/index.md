@@ -227,7 +227,7 @@ At **k = 96**, the DB index was observed to be 0.8, further validating the quali
 **Figure 1: GMM Model Selection and Cluster Visualization: Optimal k=96 determined by BIC, Silhouette, and Davies-Bouldin metrics.**
 
 
-![Table](/images/gmm_evaluation_plot.png)
+![Table](../images/gmm_evaluation_plot.png)
 
 ### 4.2 Vizualization
 
