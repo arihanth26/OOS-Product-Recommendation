@@ -1,4 +1,3 @@
-<div align="justify">
 
 # Out-of-Stock Product Recommendation Engine
 
@@ -284,7 +283,6 @@ The optimal configuration, determined through AIC, BIC, and Silhouette Score ana
 
 With the baseline GMM, k-partite graph, and evaluation harness in place, the next phase focuses on strengthening the clustering foundation and validating it under task-driven metrics. We will re-cluster with a Bayesian GMM using LLM-elicited–Normal–Inverse–Wishart (NIW) priors and benchmark against the MLE GMM (log-likelihood/BIC or ELBO; silhouette; bootstrap stability; purity vs. near-duplicate buckets and alternation constraints). Next, we will finalize the out-of-stock (OOS) replay simulator: remove item i from historical baskets, surface candidates from the k-partite graph, and label accepted if a substitute is purchased while i is not repurchased within 7/14/28 days; we will time-split by order date and keep users disjoint across train/validation/test to avoid leakage. For supervised learning, we will compare LightGBM–LambdaMART and XGBoost (pairwise/listwise ranking) using features from text/taxonomy, unit-value gaps, shopper/basket context, graph distances, and GMM responsibilities; model selection will use nested cross-validation with early stopping and Bayesian hyper-parameter search. Offline, we will report the metrics: Top-K, NDCG@K (Normalized Discounted Cumulative Gain), MRR (Mean Reciprocal Rank), Precision@K, Recall@K, Retained Basket Value (RBV), Coverage, and probability calibration (Brier score and Expected Calibration Error),with department-level breakdowns and 95% bootstrap confidence intervals; we will also include ablations (MLE vs. Bayesian GMM; ranker with/without cluster features; unconstrained vs. k-partite graph) and efficiency reads (training/refresh time, inference latency, and candidate fan-out/edge count). Beyond efficiency, we will log hardware/runtime counters (CPU/GPU hours, memory) and estimate energy CO2 using a lightweight tracker (e.g., codecarbon) per training refresh and per 1k recommendations, enabling like-for-like sustainability comparisons across models and serving policies. We will ship an interactive D3.js visualization of clusters and aisles, and we will finalize replenishment signals by ranking SKUs on RBV-at-risk multiplied by acceptance depth to identify where to deepen stock or engineer better substitutes.
 
-</div>
 
 ## 5. References
 
