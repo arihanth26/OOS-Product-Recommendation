@@ -227,7 +227,7 @@ At **$k = 96$**, the DB index was observed to be 0.8, further validating the qua
 **Figure 1: GMM Model Selection and Cluster Visualization: Optimal $k=96$ determined by BIC, Silhouette, and Davies-Bouldin metrics.**
 
 
-![plot](/images/gmm_evaluation_plot.png)
+![plot]([/images/gmm_evaluation_plot.png](https://github.gatech.edu/Group44-OOS-Recommendation/OOS-Product-Recommendation-Engine/blob/main/images/gmm_evaluation_plot.png))
 
 ### 4.2 Vizualization
 
@@ -258,7 +258,7 @@ The graph was visualized using the `networkx` library:
 
 
 
-![plot](/images/output_graph.png)
+![plot]()
 *Figure: Overall Substitution K-Partite Graph with Aisles, Clusters and P2-P2 Mappings.*
 
 An individual drill-down visualization for a particular cluster in this $k$-partite graph can be seen below:
