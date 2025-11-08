@@ -142,7 +142,7 @@ The resulting unified dataset harmonized transactional and nutritional dimension
 
 ### Gaussian Mixture Model (GMM) via Maximum Likelihood Estimation (MLE):
 
-We cluster items using a **$K$-component GMM** (a probabilistic clustering model that assigns each item a soft membership over components) fitted with **expectation–maximization, EM** (an iterative procedure that alternates between computing posterior memberships and re-estimating parameters). We initialize with k-means++ or small randomized $1/K$ responsibilities and keep three restarts to reduce sensitivity to local optima. The number of components $K$ is selected using Bayesian/Akaike criteria (BIC/AIC) and cluster stability. This baseline provides well-calibrated posterior responsibilities that become strong, low-leakage features for ranking.
+We cluster items using a **K-component GMM** (a probabilistic clustering model that assigns each item a soft membership over components) fitted with **expectation–maximization, EM** (an iterative procedure that alternates between computing posterior memberships and re-estimating parameters). We initialize with k-means++ or small randomized $1/K$ responsibilities and keep three restarts to reduce sensitivity to local optima. The number of components $K$ is selected using Bayesian/Akaike criteria (BIC/AIC) and cluster stability. This baseline provides well-calibrated posterior responsibilities that become strong, low-leakage features for ranking.
 
 ### 3.3 GMM Implementation
 
