@@ -152,7 +152,7 @@ We cluster items using a **K-component GMM** (a probabilistic clustering model t
 Before clustering, the pipeline performed extensive **feature engineering** to transform raw product data into a vector space that the Gaussian Mixture Model (GMM) could effectively process:
 
 ### Product Bucketing
-* **Product Layer (P0 & P1):** Products were first grouped into granular buckets (**P1 Buckets**) based on high similarity in name ($$\ge 0.92$$) and a tight tolerance for the price variable ($\le 10\%$). This ensures that the clustering algorithm works with averaged, highly representative product units rather than raw, noisy product data. The function `make_buckets` was used for this implementation.
+* **Product Layer (P0 & P1):** Products were first grouped into granular buckets (**P1 Buckets**) based on high similarity in name (greater than  0.92) and a tight tolerance for the price variable (less than 10). This ensures that the clustering algorithm works with averaged, highly representative product units rather than raw, noisy product data. The function `make_buckets` was used for this implementation.
 
 ### Feature Vectors
 Each bucket was represented by a high-dimensional feature vector combining three critical aspects:
@@ -168,15 +168,15 @@ Each bucket was represented by a high-dimensional feature vector combining three
 
 ## Training: Gaussian Mixture Model (GMM)
 
-A **Gaussian Mixture Model (GMM)** was employed to perform **soft clustering**, which allows each product to have a probabilistic membership across multiple clusters. This is a suitable choice for substitution modeling where a product may belong to more than one potential substitute group. A custom function, `sweep_gmm_metrics()`, was used to train multiple GMMs across different cluster counts ($k$ values) and compute performance metrics such as **AIC**, **BIC**, **Silhouette**, and **Davies–Bouldin (DB)** scores.
+A **Gaussian Mixture Model (GMM)** was employed to perform **soft clustering**, which allows each product to have a probabilistic membership across multiple clusters. This is a suitable choice for substitution modeling where a product may belong to more than one potential substitute group. A custom function, `sweep_gmm_metrics()`, was used to train multiple GMMs across different cluster counts (k values) and compute performance metrics such as **AIC**, **BIC**, **Silhouette**, and **Davies–Bouldin (DB)** scores.
 
 The parameter `tiny_frac` was set to a low value to ensure finer cluster resolution without overfitting.
 
 ### GMM Cluster Characteristics
 Each GMM cluster is characterized by:
-* **Mean ($\mu$):** Represents the centroid or center of the cluster in the feature space.
-* **Covariance ($\Sigma$):** Describes the shape and orientation of the cluster. A **full covariance matrix** was used, enabling flexible, non-spherical cluster boundaries to fit complex data distributions.
-* **Mixing Weight ($\pi$):** Represents the probability that a randomly selected product belongs to that cluster.
+* **Mean :** Represents the centroid or center of the cluster in the feature space.
+* **Covariance :** Describes the shape and orientation of the cluster. A **full covariance matrix** was used, enabling flexible, non-spherical cluster boundaries to fit complex data distributions.
+* **Mixing Weight :** Represents the probability that a randomly selected product belongs to that cluster.
 
 ### Training Algorithm
 The GMM was trained using the **Expectation-Maximization (EM)** algorithm:
@@ -195,15 +195,15 @@ The GMM was trained using the **Expectation-Maximization (EM)** algorithm:
 
 The **Silhouette Score** measures how similar an object is to its own cluster compared to other clusters. It ranges from -1 to 1, where a higher value indicates better-defined clusters. 
 
-The optimal Gaussian Mixture Model (GMM) configuration was achieved through a multi-stage iterative process that analyzed the impact of feature selection and cluster count ($k$) on model performance, primarily measured by the Silhouette Score. 
+The optimal Gaussian Mixture Model (GMM) configuration was achieved through a multi-stage iterative process that analyzed the impact of feature selection and cluster count (k) on model performance, primarily measured by the Silhouette Score. 
 
 #### Analysis of Silhouette Score:
 
 * **Using Price Metrics as primary:** GMM with price as the dominant feature yielded a Silhouette Score of **0.07** with 48 clusters, indicating poorly defined groups.
-* **Using Elbow Curve Evaluation:** Using an elbow curve to estimate optimal $k$ led to 48 clusters and a score of **0.41**, showing moderate improvement.
+* **Using Elbow Curve Evaluation:** Using an elbow curve to estimate optimal k led to 48 clusters and a score of **0.41**, showing moderate improvement.
 * **Using Ingredient Features from OpenFoodFacts dataset:** Incorporating additional ingredient and nutrition features from the OpenFoodFacts dataset and performing TF-IDF + SVD feature extraction produced significantly better clusters.
 
-Using AIC/BIC and elbow methods, the optimal number of clusters was determined as **$k = 96$**, resulting in a **Silhouette Score of 0.73**, indicating well-separated and coherent clusters.
+Using AIC/BIC and elbow methods, the optimal number of clusters was determined as **k = 96**, resulting in a **Silhouette Score of 0.73**, indicating well-separated and coherent clusters.
 
 Functions like `suggest_optimal_k` and `plot_elbow_and_metrics` were developed to automate and visualize the process of selecting the optimal number of clusters.
 
@@ -214,17 +214,17 @@ The **Akaike Information Criterion (AIC)** and **Bayesian Information Criterion 
 * Both metrics balance model fit (log-likelihood) and model complexity (number of parameters).
 * A **lower AIC/BIC** value corresponds to a better model.
 
-The BIC curve showed a clear minimum near **$k = 96$**, aligning with the silhouette results, confirming the model's optimal complexity.
+The BIC curve showed a clear minimum near k = 96,  aligning with the silhouette results, confirming the model's optimal complexity.
 
 ### 4.1.3 Davies–Bouldin (DB) Index
 
-The **DB index** quantifies cluster separation and compactness, where **lower values ($<1$)** indicate well-separated clusters. 
+The **DB index** quantifies cluster separation and compactness, where **lower values (less than 1)** indicate well-separated clusters. 
 
-At **$k = 96$**, the DB index was observed to be 0.8, further validating the quality of clustering.
+At **k = 96**, the DB index was observed to be 0.8, further validating the quality of clustering.
 
 
 
-**Figure 1: GMM Model Selection and Cluster Visualization: Optimal $k=96$ determined by BIC, Silhouette, and Davies-Bouldin metrics.**
+**Figure 1: GMM Model Selection and Cluster Visualization: Optimal k=96 determined by BIC, Silhouette, and Davies-Bouldin metrics.**
 
 
 ![Table](images/gmm_evaluation_plot.png)
@@ -233,20 +233,20 @@ At **$k = 96$**, the DB index was observed to be 0.8, further validating the qua
 
 ## Visualization and K-Partite Graph Construction
 
-To interpret and operationalize the clustering results, a **$k$-partite graph** was constructed to represent relationships across three levels of abstraction:
+To interpret and operationalize the clustering results, a **k-partite graph** was constructed to represent relationships across three levels of abstraction:
 
 * **P1 Nodes:** Represent product buckets grouped by name similarity.
 * **P2 Nodes:** Represent cluster centroids from the GMM (i.e., each P2 node is a product cluster in feature space).
 * **P3 Nodes:** Represent aisles or higher-level product categories.
 
-The $k$-partite graph was created using the `build_kpartite_graph` function, which connects these nodes based on their relationships.
+The k-partite graph was created using the `build_kpartite_graph` function, which connects these nodes based on their relationships.
 
 ### Graph Edges
 The function creates the following connections:
 
-* **P1 $\to$ P2:** Connect product buckets to their respective GMM clusters.
-* **P2 $\to$ P3:** Link each cluster to its corresponding aisle.
-* **P2 $\to$ P2:** Capture inter-cluster relationships based on **cosine similarity** between cluster centroids, identifying clusters that share similar product compositions.
+* **P1 to P2:** Connect product buckets to their respective GMM clusters.
+* **P2 to P3:** Link each cluster to its corresponding aisle.
+* **P2 to P2:** Capture inter-cluster relationships based on **cosine similarity** between cluster centroids, identifying clusters that share similar product compositions.
 
 ### Visualization
 
@@ -261,7 +261,7 @@ The graph was visualized using the `networkx` library:
 ![Table](images/output_graph.png)
 *Figure: Overall Substitution K-Partite Graph with Aisles, Clusters and P2-P2 Mappings.*
 
-An individual drill-down visualization for a particular cluster in this $k$-partite graph can be seen below:
+An individual drill-down visualization for a particular cluster in this k-partite graph can be seen below:
 
 
 
@@ -281,7 +281,7 @@ The optimal configuration, determined through **AIC**, **BIC**, and **Silhouette
 
 ### 4.4 Next Steps
 
-With the baseline GMM, $k$-partite graph, and evaluation harness in place, the next phase focuses on strengthening the clustering foundation and validating it under task-driven metrics. We will re-cluster with a **Bayesian GMM** using **LLM-elicited–Normal–Inverse–Wishart (NIW) priors** and benchmark against the **MLE GMM** (log-likelihood/BIC or ELBO; silhouette; bootstrap stability; purity vs. near-duplicate buckets and alternation constraints). Next, we will finalize the **out-of-stock (OOS) replay simulator**: remove item $i$ from historical baskets, surface candidates from the $k$-partite graph, and label accepted if a substitute is purchased while $i$ is not repurchased within 7/14/28 days; we will time-split by order date and keep users disjoint across train/validation/test to avoid leakage. For supervised learning, we will compare **LightGBM–LambdaMART** and **XGBoost** (pairwise/listwise ranking) using features from text/taxonomy, unit-value gaps, shopper/basket context, graph distances, and GMM responsibilities; model selection will use nested cross-validation with early stopping and Bayesian hyper-parameter search. Offline, we will report the metrics: **Top-K, NDCG@K** (Normalized Discounted Cumulative Gain), **MRR** (Mean Reciprocal Rank), **Precision@K**, **Recall@K**, **Retained Basket Value (RBV)**, **Coverage**, and **probability calibration** (Brier score and Expected Calibration Error)—with department-level breakdowns and 95% bootstrap confidence intervals; we will also include ablations (MLE vs. Bayesian GMM; ranker with/without cluster features; unconstrained vs. $k$-partite graph) and efficiency reads (training/refresh time, inference latency, and candidate fan-out/edge count). Beyond efficiency, we will log hardware/runtime counters (CPU/GPU hours, memory) and estimate energy CO2 using a lightweight tracker (e.g., codecarbon) per training refresh and per 1k recommendations, enabling like-for-like sustainability comparisons across models and serving policies. We will ship an interactive D3.js visualization of clusters and aisles, and we will finalize replenishment signals by ranking SKUs on RBV-at-risk multiplied by acceptance depth to identify where to deepen stock or engineer better substitutes.
+With the baseline GMM, k-partite graph, and evaluation harness in place, the next phase focuses on strengthening the clustering foundation and validating it under task-driven metrics. We will re-cluster with a **Bayesian GMM** using **LLM-elicited–Normal–Inverse–Wishart (NIW) priors** and benchmark against the **MLE GMM** (log-likelihood/BIC or ELBO; silhouette; bootstrap stability; purity vs. near-duplicate buckets and alternation constraints). Next, we will finalize the **out-of-stock (OOS) replay simulator**: remove item i from historical baskets, surface candidates from the k-partite graph, and label accepted if a substitute is purchased while i is not repurchased within 7/14/28 days; we will time-split by order date and keep users disjoint across train/validation/test to avoid leakage. For supervised learning, we will compare **LightGBM–LambdaMART** and **XGBoost** (pairwise/listwise ranking) using features from text/taxonomy, unit-value gaps, shopper/basket context, graph distances, and GMM responsibilities; model selection will use nested cross-validation with early stopping and Bayesian hyper-parameter search. Offline, we will report the metrics: **Top-K, NDCG@K** (Normalized Discounted Cumulative Gain), **MRR** (Mean Reciprocal Rank), **Precision@K**, **Recall@K**, **Retained Basket Value (RBV)**, **Coverage**, and **probability calibration** (Brier score and Expected Calibration Error)—with department-level breakdowns and 95% bootstrap confidence intervals; we will also include ablations (MLE vs. Bayesian GMM; ranker with/without cluster features; unconstrained vs. k-partite graph) and efficiency reads (training/refresh time, inference latency, and candidate fan-out/edge count). Beyond efficiency, we will log hardware/runtime counters (CPU/GPU hours, memory) and estimate energy CO2 using a lightweight tracker (e.g., codecarbon) per training refresh and per 1k recommendations, enabling like-for-like sustainability comparisons across models and serving policies. We will ship an interactive D3.js visualization of clusters and aisles, and we will finalize replenishment signals by ranking SKUs on RBV-at-risk multiplied by acceptance depth to identify where to deepen stock or engineer better substitutes.
 
 ## 5. References
 
