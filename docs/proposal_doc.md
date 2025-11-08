@@ -1,3 +1,4 @@
+<div align="justify">
 # Out-of-Stock Product Recommendation Engine
 
 ## 1. Problem Definition
@@ -55,6 +56,8 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 
 **Sustainability and efficiency:** Better first-shot acceptance reduces corrections, re-deliveries, and food waste. Our graph-based candidate generator (alternation + node2vec/DeepWalk) with a GBDT ranker is lighter than large SVD pipelines, cutting training/refresh time and energy; we will report runtimes and, where feasible, estimated energy use.
 
+</div>
+
 
 ## 5. Gantt Chart and Contributions
 
@@ -83,4 +86,6 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 - A. Goulas, A. Mark, and P. G. de Witte, “AutoElicit: Using Large Language Models for Expert Prior Elicitation,” arXiv:2411.17284, 2024. 
 - X. Zhang, Z. Liu, and T. Liu, “Adapting LLMs to text ranking with weak supervision,” arXiv:2311.16720v3, 2024. 
 - S. Khanduja, S. Raghavan, and A. Doan, “LLM-assisted labeling function generation for semantic type detection,” arXiv:2408.16173, 2024.
+
+  
 
