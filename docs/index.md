@@ -118,7 +118,7 @@ To align Instacart products with OpenFoodFacts entries, we developed a multi-sta
      If none of the above apply, mark as “Not Confident”;  
      `final_algo = None`, `final_score = 0`.
 
-   Each product record stored `final_match` (`c*` string), `final_algo`, and `final_score`, along with diagnostic fields (token count, last tokens, and top-K similarity scores) for transparency and reproducibility.
+Each product record stored `final_match` (`c*` string), `final_algo`, and `final_score`, along with diagnostic fields (token count, last tokens, and top-K similarity scores) for transparency and reproducibility.
 
 ---
 
