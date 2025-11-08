@@ -80,13 +80,11 @@ Instacart data provided structured product and category information (`product_na
 
 ---
 
-<p style="text-align: justify;">
 ### Step 1. Instacart Data Preparation
 We used the Kaggle Instacart Online Grocery Shopping Dataset, retaining `products.csv`, `aisles.csv`, and `departments.csv`. These were merged into a clean product table containing product IDs, names, aisles, and departments for subsequent linkage.
-</p>
+
 ---
 
-<p style="text-align: justify;">
 ### Step 2. OpenFoodFacts Processing
 The OpenFoodFacts dataset was accessed through the `datasets` library in Python (Hugging Face).  
 Only relevant columns were retained: `product_name`, `brands`, `categories`, `ingredients_text`, `ingredients_tags`, `nutriments`, and related metadata.
@@ -96,7 +94,6 @@ Only relevant columns were retained: `product_name`, `brands`, `categories`, `in
 - Category Cleaning: Normalized `compared_to_category` by removing language prefixes and non-alphanumeric characters to form a clean `final_category`.  
 - Nutriments Expansion: The nested `nutriments` JSON field was flattened into individual columns. Attributes with fewer than 20% missing values (e.g., `energy_100g`, `fat_100g`, `saturated-fat_100g`, `sugars_100g`, `proteins_100g`, `salt_100g`, `fiber_100g`) were retained, yielding a consistent columnar nutrient schema.
 
-</p>
 
 ---
 
