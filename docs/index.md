@@ -308,5 +308,5 @@ With the baseline GMM, k-partite graph, and evaluation harness in place, the nex
 ## 7. Gantt Chart
 
 ![Table](images/Gantt_Image.png)
-[See the document](docs/Midterm_Gantt_Chart.xlsx)
+[See the document](Midterm_Gantt_Chart.xlsx)
 
