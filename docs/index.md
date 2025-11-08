@@ -56,13 +56,12 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 
 ### 2.4 Literature Survey
 
-<p style="text-align: justify;">
 * node2vec (Grover & Leskovec, 2016). This method introduces a flexible, biased random walk procedure to learn low-dimensional vector representations (embeddings) of nodes in graphs. It is valuable because it can capture both local neighborhood structure and broader community structure, making it ideal for retrieval tasks like finding similar substitute items ("items on a map" style retrieval).
 * DeepWalk (Perozzi et al., 2014). An earlier, foundational method that uses standard uniform random walks to embed graph nodes. It paved the way for modern graph representation learning and is crucial for creating robust product-graph embeddings that capture item-to-item relatedness based on co-occurrence in shopper baskets.
 * Learning to Rank / LambdaMART (Burges, 2010). This is a core boosted tree ranking approach derived from Microsoft Research. It optimizes directly for ranking metrics like NDCG by treating the gradient as the change in the ranking metric (the "lambda"). It is the standard-bearer for supervised ranking in search and recommendation systems due to its high performance and feature handling capabilities.
 * Substitution Policies in Online Grocery (Hoang & Breugelmans, 2023). This work focuses specifically on how different retailer substitution rules (e.g., brand-only, size-up) affect customer acceptance and value perception in grocery retail. This motivates the project's goal of optimizing the recommendation engine to maximize acceptance and Retained Basket Value (RBV), rather than just raw prediction accuracy.
 * LLM-Prior (Huang, 2025). This emerging technique automates Bayesian prior elicitation by leveraging large language models (LLMs). The LLM is used to translate unstructured product context (descriptions, categories, brand history) into structured Normal-Inverse-Wishart (NIW) hyperparameters for the Bayesian GMM. This allows us to inject crucial domain knowledge into the clustering process, especially when training data is sparse.
-</p>
+
 
 
 
@@ -102,6 +101,7 @@ Only relevant columns were retained: `product_name`, `brands`, `categories`, `in
 ---
 
 ### Step 3. Product Matching
+
 To align Instacart products with OpenFoodFacts entries, we developed a multi-stage hybrid pipeline combining deep embeddings, approximate nearest-neighbor retrieval, and rule-based scoring.
 
 1. Normalization: Standardized product names (lowercase, punctuation and unit removal) and removed constant stopwords (`inc`, `ltd`, `co`, `pack`, `oz`, `ml`, `g`, `kg`, etc.).  
@@ -216,9 +216,13 @@ The GMM was trained using the Expectation-Maximization (EM) algorithm:
 
 ### 4.1.1 Silhouette Score
 
+<p style="text-align: justify;">
 The Silhouette Score measures how similar an object is to its own cluster compared to other clusters. It ranges from -1 to 1, where a higher value indicates better-defined clusters. 
+</p>
 
+<p style="text-align: justify;">
 The optimal Gaussian Mixture Model (GMM) configuration was achieved through a multi-stage iterative process that analyzed the impact of feature selection and cluster count (k) on model performance, primarily measured by the Silhouette Score. 
+</p>
 
 #### Analysis of Silhouette Score:
 
@@ -296,10 +300,13 @@ This visual network provides an intuitive way to explore substitution relationsh
 
 ### 4.3 Analysis of Algorithm
 
+<p style="text-align: justify;">
 The Gaussian Mixture Model (GMM) effectively captured the nuanced relationships between grocery products by allowing soft membership across multiple clusters, which is ideal for substitution scenarios. The iterative Expectation-Maximization (EM) training achieved stable convergence, and the combination of textual, price, and nutritional features significantly improved cluster quality.  
+</p>
 
+<p style="text-align: justify;">
 The optimal configuration, determined through AIC, BIC, and Silhouette Score analysis, was found at k = 96, yielding a high Silhouette Score of 0.73 and a Davies–Bouldin Index below 1, indicating compact and well-separated clusters. These results validate the GMM’s suitability as a foundational unsupervised layer for generating meaningful product substitutes and guiding downstream personalized ranking.
-
+</p>
 
 ### 4.4 Next Steps
 
