@@ -85,25 +85,30 @@ Each collaborator must manually download and place the data locally.
 ```
 OOS-Product-Recommendation-Engine/
 │
-├── data/                     # Local data (not in git)
-│   ├── raw/                  # Original datasets
-│       ├── aisles.csv
-│       ├── departments.csv
-│       ├── order_products__prior.csv
-│       ├── order_products__train.csv
-│       ├── orders.csv
-│       ├── products.csv
-│       ├── products_with_prices_ingredients_nutrition.csv
-│   ├── processed/            # Cleaned/transformed data
-│   ├── external/             # Optional APIs or external sources
-│   └── README.txt            # Short note on where the data came from
+├── data/                               # Local data (not in git)
+│   ├── raw/                            # Original datasets
+│   │   ├── aisles.csv
+│   │   ├── departments.csv
+│   │   ├── order_products__prior.csv
+│   │   ├── order_products__train.csv
+│   │   ├── orders.csv
+│   │   ├── products.csv
+│   │   └── products_with_prices_ingredients_nutrition.csv
+│   ├── processed/                      # Cleaned/transformed data
+│   ├── external/                       # Optional APIs or external sources
+│   └── README.txt                      # Short note on where the data came from
 │
-├── notebooks/                # Jupyter notebooks
-├── src/                      # Python source code
+├── notebooks/                          # Jupyter notebooks
+│   ├── data_processing.ipynb           # Notebook for data cleaning and feature engineering
+│   ├── gmm_train.ipynb                 # Notebook for training the GMM (Gaussian Mixture Model)
+│   └── product_analysis.ipynb          # Notebook for exploratory data analysis (EDA) performed on Instacart Dataset
+│
+├── src/                                # Python source code
 ├── requirements.txt
 ├── .gitignore
 └── .venv/
 ```
+
 ### The folder `data/` is excluded in `.gitignore`:
 ```gitignore
 data/
