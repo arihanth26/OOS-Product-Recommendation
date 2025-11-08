@@ -227,7 +227,7 @@ At **k = 96**, the DB index was observed to be 0.8, further validating the quali
 **Figure 1: GMM Model Selection and Cluster Visualization: Optimal k=96 determined by BIC, Silhouette, and Davies-Bouldin metrics.**
 
 
-![Table](images/gmm_evaluation_plot.png)
+![Table](/images/gmm_evaluation_plot.png)
 
 ### 4.2 Vizualization
 
@@ -258,14 +258,14 @@ The graph was visualized using the `networkx` library:
 
 
 
-![Table](images/output_graph.png)
+![Table](/images/output_graph.png)
 *Figure: Overall Substitution K-Partite Graph with Aisles, Clusters and P2-P2 Mappings.*
 
 An individual drill-down visualization for a particular cluster in this k-partite graph can be seen below:
 
 
 
-![Table](images/individual_cluster_graph.png)
+![Table](/images/individual_cluster_graph.png)
 *Figure: Hierarchical Drill-Down: Products in Cluster 44 (Aisle: water seltzer sparkling water).*
 
 This visual network provides an intuitive way to explore substitution relationships and product proximity within and across aisles, which is critical for the supervised learning algorithm and substitution ranking.
@@ -307,6 +307,6 @@ With the baseline GMM, k-partite graph, and evaluation harness in place, the nex
 
 ## 7. Gantt Chart
 
-![Table](images/Gantt_Image.png)
+![Table](/images/Gantt_Image.png)
 [See the document](docs/Midterm_Gantt_Chart.xlsx)
 
