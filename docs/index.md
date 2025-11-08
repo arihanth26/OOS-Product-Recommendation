@@ -26,7 +26,9 @@ By developing a sophisticated, multi-stage engine, combining Bayesian GMM cluste
 
 ## 2.1 Goal
 
+<p style="text-align: justify;">
 When a shopper’s item is out-of-stock (OOS), we must suggest a *good replacement* so they still check out and we retain order value. We also surface Stock Keeping Units (SKUs) whose best replacements are weak so planners can stock those deeper.
+</p>
 
 *Reason:* This dual approach protects completion and retained basket value (RBV) while simultaneously informing inventory policy to prevent future OOS issues.
 
@@ -48,17 +50,19 @@ When a shopper’s item is out-of-stock (OOS), we must suggest a *good replaceme
   
 ### 2.3 What Makes Our Project Novel
 
+<p style="text-align: justify;">
 We build substitutes from an alternation graph (bought instead of) rather than co-purchase, so complements don’t contaminate candidates. We optimize for RBV and acceptance@K, and surface SKUs with weak substitute coverage for planners. On the modeling side, we compare a vanilla GMM to a Bayesian GMM with LLM-elicited NIW priors to stabilize sparse categories. For serving, a k-partite graph collapses near-duplicates into “100% buckets” and routes to next-best clusters only when needed- yielding a sparse, interpretable fallback policy.
-
+</p>
 
 ### 2.4 Literature Survey
 
+<p style="text-align: justify;">
 * node2vec (Grover & Leskovec, 2016). This method introduces a flexible, biased random walk procedure to learn low-dimensional vector representations (embeddings) of nodes in graphs. It is valuable because it can capture both local neighborhood structure and broader community structure, making it ideal for retrieval tasks like finding similar substitute items ("items on a map" style retrieval).
 * DeepWalk (Perozzi et al., 2014). An earlier, foundational method that uses standard uniform random walks to embed graph nodes. It paved the way for modern graph representation learning and is crucial for creating robust product-graph embeddings that capture item-to-item relatedness based on co-occurrence in shopper baskets.
 * Learning to Rank / LambdaMART (Burges, 2010). This is a core boosted tree ranking approach derived from Microsoft Research. It optimizes directly for ranking metrics like NDCG by treating the gradient as the change in the ranking metric (the "lambda"). It is the standard-bearer for supervised ranking in search and recommendation systems due to its high performance and feature handling capabilities.
 * Substitution Policies in Online Grocery (Hoang & Breugelmans, 2023). This work focuses specifically on how different retailer substitution rules (e.g., brand-only, size-up) affect customer acceptance and value perception in grocery retail. This motivates the project's goal of optimizing the recommendation engine to maximize acceptance and Retained Basket Value (RBV), rather than just raw prediction accuracy.
 * LLM-Prior (Huang, 2025). This emerging technique automates Bayesian prior elicitation by leveraging large language models (LLMs). The LLM is used to translate unstructured product context (descriptions, categories, brand history) into structured Normal-Inverse-Wishart (NIW) hyperparameters for the Bayesian GMM. This allows us to inject crucial domain knowledge into the clustering process, especially when training data is sparse.
-
+</p>
 
 
 
@@ -66,18 +70,24 @@ We build substitutes from an alternation graph (bought instead of) rather than c
 
 ### 3.1 Data Preprocessing Implemented 
 
+<p style="text-align: justify;">
 This section describes how we preprocessed and combined Instacart grocery products (Kaggle) with OpenFoodFacts ingredient and nutrition data, producing a unified table that aligns retail and compositional attributes. The preprocessing required extensive normalization and entity matching across two heterogeneous datasets that lacked a common identifier such as barcode or SKU.
+</p>
 
+<p style="text-align: justify;">
 Challenges:  
 Instacart data provided structured product and category information (`product_name`, `aisle`, `department`) but no nutritional attributes, whereas OpenFoodFacts offered rich metadata with highly variable text fields (`product_name`, `brands`, `categories`) across multiple languages and inconsistent formatting. Direct string joins produced poor recall, motivating a hybrid semantic–fuzzy matching approach.
+</p>
 
 ---
 
+<p style="text-align: justify;">
 ### Step 1. Instacart Data Preparation
 We used the Kaggle Instacart Online Grocery Shopping Dataset, retaining `products.csv`, `aisles.csv`, and `departments.csv`. These were merged into a clean product table containing product IDs, names, aisles, and departments for subsequent linkage.
-
+</p>
 ---
 
+<p style="text-align: justify;">
 ### Step 2. OpenFoodFacts Processing
 The OpenFoodFacts dataset was accessed through the `datasets` library in Python (Hugging Face).  
 Only relevant columns were retained: `product_name`, `brands`, `categories`, `ingredients_text`, `ingredients_tags`, `nutriments`, and related metadata.
@@ -86,6 +96,8 @@ Only relevant columns were retained: `product_name`, `brands`, `categories`, `in
 - Text Flattening: Extracted text from nested list–dictionary structures, lowercased, and removed punctuation and extra whitespace.  
 - Category Cleaning: Normalized `compared_to_category` by removing language prefixes and non-alphanumeric characters to form a clean `final_category`.  
 - Nutriments Expansion: The nested `nutriments` JSON field was flattened into individual columns. Attributes with fewer than 20% missing values (e.g., `energy_100g`, `fat_100g`, `saturated-fat_100g`, `sugars_100g`, `proteins_100g`, `salt_100g`, `fiber_100g`) were retained, yielding a consistent columnar nutrient schema.
+
+</p>
 
 ---
 
@@ -149,7 +161,9 @@ The resulting unified dataset harmonized transactional and nutritional dimension
 
 ### Gaussian Mixture Model (GMM) via Maximum Likelihood Estimation (MLE):
 
+<p style="text-align: justify;">
 We cluster items using a K-component GMM (a probabilistic clustering model that assigns each item a soft membership over components) fitted with expectation–maximization, EM (an iterative procedure that alternates between computing posterior memberships and re-estimating parameters). We initialize with k-means++ or small randomized 1/K responsibilities and keep three restarts to reduce sensitivity to local optima. The number of components K is selected using Bayesian/Akaike criteria (BIC/AIC) and cluster stability. This baseline provides well-calibrated posterior responsibilities that become strong, low-leakage features for ranking.
+</p>
 
 ### 3.3 GMM Implementation
 
@@ -175,7 +189,9 @@ Each bucket was represented by a high-dimensional feature vector combining three
 
 ## Training: Gaussian Mixture Model (GMM)
 
+<p style="text-align: justify;">
 A Gaussian Mixture Model (GMM) was employed to perform soft clustering, which allows each product to have a probabilistic membership across multiple clusters. This is a suitable choice for substitution modeling where a product may belong to more than one potential substitute group. A custom function, `sweep_gmm_metrics()`, was used to train multiple GMMs across different cluster counts (k values) and compute performance metrics such as AIC, BIC, Silhouette, and Davies–Bouldin (DB) scores.
+</p>
 
 The parameter `tiny_frac` was set to a low value to ensure finer cluster resolution without overfitting.
 
@@ -287,7 +303,9 @@ The optimal configuration, determined through AIC, BIC, and Silhouette Score ana
 
 ### 4.4 Next Steps
 
+<p style="text-align: justify;">
 With the baseline GMM, k-partite graph, and evaluation harness in place, the next phase focuses on strengthening the clustering foundation and validating it under task-driven metrics. We will re-cluster with a Bayesian GMM using LLM-elicited–Normal–Inverse–Wishart (NIW) priors and benchmark against the MLE GMM (log-likelihood/BIC or ELBO; silhouette; bootstrap stability; purity vs. near-duplicate buckets and alternation constraints). Next, we will finalize the out-of-stock (OOS) replay simulator: remove item i from historical baskets, surface candidates from the k-partite graph, and label accepted if a substitute is purchased while i is not repurchased within 7/14/28 days; we will time-split by order date and keep users disjoint across train/validation/test to avoid leakage. For supervised learning, we will compare LightGBM–LambdaMART and XGBoost (pairwise/listwise ranking) using features from text/taxonomy, unit-value gaps, shopper/basket context, graph distances, and GMM responsibilities; model selection will use nested cross-validation with early stopping and Bayesian hyper-parameter search. Offline, we will report the metrics: Top-K, NDCG@K (Normalized Discounted Cumulative Gain), MRR (Mean Reciprocal Rank), Precision@K, Recall@K, Retained Basket Value (RBV), Coverage, and probability calibration (Brier score and Expected Calibration Error),with department-level breakdowns and 95% bootstrap confidence intervals; we will also include ablations (MLE vs. Bayesian GMM; ranker with/without cluster features; unconstrained vs. k-partite graph) and efficiency reads (training/refresh time, inference latency, and candidate fan-out/edge count). Beyond efficiency, we will log hardware/runtime counters (CPU/GPU hours, memory) and estimate energy CO2 using a lightweight tracker (e.g., codecarbon) per training refresh and per 1k recommendations, enabling like-for-like sustainability comparisons across models and serving policies. We will ship an interactive D3.js visualization of clusters and aisles, and we will finalize replenishment signals by ranking SKUs on RBV-at-risk multiplied by acceptance depth to identify where to deepen stock or engineer better substitutes.
+</p>
 
 
 ## 5. References
