@@ -142,7 +142,7 @@ The resulting unified dataset harmonized transactional and nutritional dimension
 
 ### Gaussian Mixture Model (GMM) via Maximum Likelihood Estimation (MLE):
 
-We cluster items using a **K-component GMM** (a probabilistic clustering model that assigns each item a soft membership over components) fitted with **expectation–maximization, EM** (an iterative procedure that alternates between computing posterior memberships and re-estimating parameters). We initialize with k-means++ or small randomized $1/K$ responsibilities and keep three restarts to reduce sensitivity to local optima. The number of components $K$ is selected using Bayesian/Akaike criteria (BIC/AIC) and cluster stability. This baseline provides well-calibrated posterior responsibilities that become strong, low-leakage features for ranking.
+We cluster items using a **K-component GMM** (a probabilistic clustering model that assigns each item a soft membership over components) fitted with **expectation–maximization, EM** (an iterative procedure that alternates between computing posterior memberships and re-estimating parameters). We initialize with k-means++ or small randomized 1/K responsibilities and keep three restarts to reduce sensitivity to local optima. The number of components K is selected using Bayesian/Akaike criteria (BIC/AIC) and cluster stability. This baseline provides well-calibrated posterior responsibilities that become strong, low-leakage features for ranking.
 
 ### 3.3 GMM Implementation
 
@@ -152,7 +152,7 @@ We cluster items using a **K-component GMM** (a probabilistic clustering model t
 Before clustering, the pipeline performed extensive **feature engineering** to transform raw product data into a vector space that the Gaussian Mixture Model (GMM) could effectively process:
 
 ### Product Bucketing
-* **Product Layer (P0 & P1):** Products were first grouped into granular buckets (**P1 Buckets**) based on high similarity in name ($\ge 0.92$) and a tight tolerance for the price variable ($\le 10\%$). This ensures that the clustering algorithm works with averaged, highly representative product units rather than raw, noisy product data. The function `make_buckets` was used for this implementation.
+* **Product Layer (P0 & P1):** Products were first grouped into granular buckets (**P1 Buckets**) based on high similarity in name ($$\ge 0.92$$) and a tight tolerance for the price variable ($\le 10\%$). This ensures that the clustering algorithm works with averaged, highly representative product units rather than raw, noisy product data. The function `make_buckets` was used for this implementation.
 
 ### Feature Vectors
 Each bucket was represented by a high-dimensional feature vector combining three critical aspects:
