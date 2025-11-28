@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Drilldown Graph — Aisles → Clusters → Products</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    html,body { height:100%; margin:0; font-family: Arial, Helvetica, sans-serif; }
+    #app { width:100vw; height:100vh; position:relative; background:#f7f7f9; }
+    svg { width:100%; height:100%; display:block; }
+    .aisle { cursor:default; }
+    .cluster { cursor:pointer; stroke:#222; stroke-width:0.6px; }
+    .cluster:hover { stroke-width:1.6px; stroke:#000; }
+    .label { font-size:12px; fill:#111; pointer-events:none; }
+    .aisle-label { font-weight:700; font-size:14px; }
+    .tooltip { position:absolute; background:rgba(0,0,0,0.8); color:white; padding:6px 8px; border-radius:4px; font-size:12px; pointer-events:none; display:none; }
+
+    /* overlay modal */
+    #overlay { position:absolute; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; }
+    #panel { width:90%; max-width:1100px; height:80%; background:white; border-radius:6px; box-shadow: 0 6px 30px rgba(0,0,0,0.3); position:relative; overflow:hidden; }
+    #panel-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #eee; }
+    #panel-body { position:absolute; left:0; right:0; top:52px; bottom:0; }
+    #close-btn { background:#ef5350; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; }
+    #panel-title { font-size:16px; font-weight:700; }
+    .product-node { stroke:#fff; stroke-width:0.8px; cursor:default; }
+    .product-label { font-size:11px; }
+    .legend { position:absolute; right:12px; top:12px; background:rgba(255,255,255,0.9); padding:8px; border-radius:6px; font-size:12px; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="tooltip" class="tooltip"></div>
+  <svg id="main-svg"></svg>
+  <div class="legend" id="legend"></div>
+
+  <div id="overlay">
+    <div id="panel">
+      <div id="panel-header">
+        <div id="panel-title">Products in cluster</div>
+        <div>
+          <button id="close-btn">Close</button>
+        </div>
+      </div>
+      <div id="panel-body">
+        <svg id="panel-svg" width="100%" height="100%"></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const jsonPath = "../data/processed/drilldown_graph.json"; // update if your JSON file lives elsewhere
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const svg = d3.select('#main-svg').attr('viewBox', `0 0 ${width} ${height}`);
+  const tooltip = d3.select('#tooltip');
+
+  d3.json(jsonPath).then(graph => {
+    // Separate nodes by type
+    const nodes = graph.nodes;
+    const aisles = nodes.filter(d => d.type === 'P3_Aisle');
+    const clusters = nodes.filter(d => d.type === 'P2_Cluster');
+    const products = nodes.filter(d => d.type === 'P1_Bucket');
+
+    // Color scale by aisle name
+    const aisleNames = Array.from(new Set(aisles.map(d => d.name))).sort();
+    const color = d3.scaleOrdinal().domain(aisleNames).range(d3.schemeTableau10.concat(d3.schemeCategory10));
+
+    // Layout aisles in a horizontal row (with wrapping)
+    const aisleCols = Math.ceil(Math.sqrt(aisles.length));
+    const aisleGapX = Math.max(200, width / Math.max(1, aisleCols));
+    const aisleXStart = 80;
+    const aisleY = 100;
+
+    // Create container groups
+    const g = svg.append('g').attr('class','root');
+
+    // For each aisle, create a group and render its clusters underneath
+    const aisleGroups = g.selectAll('.aisle-group')
+      .data(aisles)
+      .enter()
+      .append('g')
+      .attr('class','aisle-group')
+      .attr('transform', (d,i) => {
+        const col = i % aisleCols;
+        const row = Math.floor(i / aisleCols);
+        const x = aisleXStart + col * aisleGapX;
+        const y = aisleY + row * 200;
+        d._layout = {x, y};
+        return `translate(${x},${y})`;
+      });
+
+    // Aisle circle + label
+    aisleGroups.append('circle')
+      .attr('class','aisle')
+      .attr('r', 42)
+      .attr('fill', d => color(d.name))
+      .attr('stroke', '#333')
+      .attr('stroke-width', 1.2)
+      .on('mouseover', (event,d) => showTooltip(event, d.name))
+      .on('mouseout', hideTooltip);
+
+    aisleGroups.append('text')
+      .attr('class','label aisle-label')
+      .attr('y', 60)
+      .attr('text-anchor','middle')
+      .text(d => d.name)
+      .call(wrapText, 160);
+
+    // Map aisle -> clusters
+    const clustersByAisle = d3.group(clusters, d => d.aisle_name || d.aisle_name === undefined ? d.aisle_name || d.aisle_name : d.aisle_name);
+
+    // Render clusters for each aisle
+    aisleGroups.each(function(aisle) {
+      const cg = d3.select(this);
+      const cdata = clustersByAisle.get(aisle.name) || [];
+      const cols = Math.ceil(Math.sqrt(cdata.length));
+      const gap = 34;
+      const startX = - (Math.min(cols,10) - 1) * gap / 2; // center
+      cdata.forEach((c, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const cx = startX + col * gap;
+        const cy = 110 + row * 70;
+        c._layout = {cx, cy};
+      });
+
+      const clustersG = cg.selectAll('.cluster')
+        .data(cdata, d => d.id)
+        .enter()
+        .append('g')
+        .attr('class','cluster-group')
+        .attr('transform', d => `translate(${d._layout.cx},${d._layout.cy})`)
+        .style('cursor','pointer')
+        .on('mouseover', (event,d) => showTooltip(event, d.name))
+        .on('mouseout', hideTooltip)
+        .on('click', (event,d) => openClusterPanel(d));
+
+      clustersG.append('circle')
+        .attr('class','cluster')
+        .attr('r', 18)
+        .attr('fill', d => color(aisle.name));
+
+      clustersG.append('text')
+        .attr('class','label')
+        .attr('y', 4)
+        .attr('text-anchor','middle')
+        .text(d => d.name);
+
+    });
+
+    // Build legend
+    const legend = d3.select('#legend');
+    legend.html('');
+    legend.append('div').html('<b>Legend</b>');
+    const legendList = legend.append('div');
+    aisleNames.slice(0,20).forEach(name => { // show up to 20 aisles in legend
+      const item = legendList.append('div').style('display','flex').style('align-items','center').style('gap','8px').style('margin-top','6px');
+      item.append('div').style('width','14px').style('height','14px').style('background', color(name)).style('border-radius','3px');
+      item.append('div').text(name).style('font-size','12px');
+    });
+
+    // Tooltip helpers
+    function showTooltip(event, text) {
+      tooltip.style('display','block')
+        .html(text)
+        .style('left', (event.pageX + 12) + 'px')
+        .style('top', (event.pageY + 12) + 'px');
+    }
+    function hideTooltip() { tooltip.style('display','none'); }
+
+    // Panel for products
+    const overlay = d3.select('#overlay');
+    const panelSvg = d3.select('#panel-svg');
+    const panelTitle = d3.select('#panel-title');
+    d3.select('#close-btn').on('click', closePanel);
+
+    function openClusterPanel(cluster) {
+      // find products in this cluster
+      const clusterProducts = products.filter(p => +p.cluster_id === +cluster.name.split(' ')[1] || +p.cluster_id === cluster.cluster_id || p.cluster_id == cluster.cluster_id);
+      panelTitle.text(`${cluster.name} — products (${clusterProducts.length})`);
+      overlay.style('display','flex');
+      renderProducts(clusterProducts, cluster);
+    }
+
+    function closePanel() {
+      overlay.style('display','none');
+      panelSvg.selectAll('*').remove();
+    }
+
+    function renderProducts(productNodes, cluster) {
+      panelSvg.selectAll('*').remove();
+      const pw = document.querySelector('#panel-body').clientWidth;
+      const ph = document.querySelector('#panel-body').clientHeight;
+      panelSvg.attr('viewBox', `0 0 ${pw} ${ph}`);
+
+      // Limit nodes if extremely large
+      const nodesToRender = productNodes.slice(0, 800); // safety cap
+
+      // Create simulation for products
+      const sim = d3.forceSimulation(nodesToRender)
+        .force('charge', d3.forceManyBody().strength(-18))
+        .force('center', d3.forceCenter(pw/2, ph/2))
+        .force('collision', d3.forceCollide().radius(d => 22))
+        .on('tick', ticked);
+
+      const linkG = panelSvg.append('g').attr('class','links');
+      const nodeG = panelSvg.append('g').attr('class','nodes');
+
+      // draw nodes
+      const n = nodeG.selectAll('g.product')
+        .data(nodesToRender, d => d.id)
+        .enter()
+        .append('g')
+        .attr('class','product')
+        .call(drag(sim));
+
+      n.append('circle')
+        .attr('class','product-node')
+        .attr('r', 16)
+        .attr('fill', d => color(cluster.aisle_name || cluster.name))
+        .on('mouseover', (event,d) => showTooltip(event, d.name))
+        .on('mouseout', hideTooltip);
+
+      n.append('text')
+        .attr('class','product-label')
+        .attr('y', 4)
+        .attr('text-anchor','middle')
+        .text(d => d.name)
+        .style('pointer-events','none');
+
+      function ticked() {
+        n.attr('transform', d => `translate(${d.x},${d.y})`);
+      }
+
+      function drag(simulation) {
+        function dragstarted(event, d) {
+          if (!event.active) simulation.alphaTarget(0.3).restart();
+          d.fx = d.x; d.fy = d.y;
+        }
+        function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+        function dragended(event, d) {
+          if (!event.active) simulation.alphaTarget(0);
+          d.fx = null; d.fy = null;
+        }
+        return d3.drag()
+          .on('start', dragstarted)
+          .on('drag', dragged)
+          .on('end', dragended);
+      }
+
+    }
+
+    // Utility: wrap text for labels (simple)
+    function wrapText(textSel, width) {
+      textSel.each(function() {
+        const text = d3.select(this);
+        const words = text.text().split(/\s+/).reverse();
+        let word;
+        let line = [];
+        let lineNumber = 0;
+        const lineHeight = 1.1; // ems
+        const y = text.attr('y') || 0;
+        const x = 0;
+        let tspan = text.text(null).append('tspan').attr('x', x).attr('y', y);
+        while (word = words.pop()) {
+          line.push(word);
+          tspan.text(line.join(' '));
+          if (tspan.node().getComputedTextLength() > width) {
+            line.pop();
+            tspan.text(line.join(' '));
+            line = [word];
+            tspan = text.append('tspan').attr('x', x).attr('y', ++lineNumber * 14 + (+y)).text(word);
+          }
+        }
+      });
+    }
+
+  }).catch(err => {
+    console.error('Failed to load JSON:', err);
+    d3.select('#main-svg').append('text').attr('x',20).attr('y',40).text('Error loading graph JSON — check console for details');
+  });
+
+})();
+</script>
+</body>
+</html>
