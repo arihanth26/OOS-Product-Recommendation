@@ -105,12 +105,6 @@ export function D3HierarchicalGraph({ onClose, onSwitchLayout }: D3HierarchicalG
         .attr('y2', (d: any) => aisles.find((a: any) => a.id === d.target).y);
 
       // Draw aisle nodes
-      function abbreviateAisle(name: string) {
-        if (!name) return '';
-        const maxChars = 11;
-        return name.length > maxChars ? name.slice(0, maxChars - 1) + '…' : name;
-      }
-
       const aisleGroup = root.append('g')
         .selectAll('g.aisle-group')
         .data(aisles)
@@ -125,17 +119,35 @@ export function D3HierarchicalGraph({ onClose, onSwitchLayout }: D3HierarchicalG
         .attr('stroke', '#fff')
         .attr('stroke-width', 1.2);
 
-      aisleGroup.append('text')
-        .attr('class', 'aisle-name-inner')
-        .attr('dy', '0.35em')
-        .style('font-size', '11px')
-        .style('font-weight', '600')
-        .style('fill', '#fff')
-        .style('text-anchor', 'middle')
-        .style('pointer-events', 'none')
-        .text((d: any) => abbreviateAisle(d.name))
-        .append('title')
-        .text((d: any) => d.name);
+      // Add text with dynamic font sizing to fit within circle
+      aisleGroup.each(function(d: any) {
+        const group = d3.select(this);
+        const name = d.name || '';
+        const maxWidth = 54; // Diameter minus padding (30*2 - 6)
+        
+        // Start with base font size and reduce if needed
+        let fontSize = 9;
+        const text = group.append('text')
+          .attr('class', 'aisle-name-inner')
+          .attr('dy', '0.35em')
+          .style('font-size', `${fontSize}px`)
+          .style('font-weight', '600')
+          .style('fill', '#fff')
+          .style('text-anchor', 'middle')
+          .style('pointer-events', 'none')
+          .text(name);
+        
+        // Measure and adjust font size if text is too wide
+        let bbox = (text.node() as SVGTextElement).getBBox();
+        while (bbox.width > maxWidth && fontSize > 6) {
+          fontSize -= 0.5;
+          text.style('font-size', `${fontSize}px`);
+          bbox = (text.node() as SVGTextElement).getBBox();
+        }
+        
+        // Add tooltip with full name
+        text.append('title').text(name);
+      });
 
       // Draw cluster nodes
       function clusterNumber(d: any) {
@@ -311,7 +323,8 @@ export function D3HierarchicalGraph({ onClose, onSwitchLayout }: D3HierarchicalG
       function openClusterPanel(cluster: any) {
         clusterNode.classed('highlight', (c: any) => c === cluster);
         const products = getClusterProducts(cluster);
-        panelTitle.text(`${cluster.name} – Products (${products.length})`);
+        const aisleNames = cluster.aisle_name || 'Unknown Aisle';
+        panelTitle.text(`${cluster.name} – ${aisleNames} – Products (${products.length})`);
         overlay.style('display', 'flex');
         renderProducts(products, cluster);
       }
@@ -330,15 +343,50 @@ export function D3HierarchicalGraph({ onClose, onSwitchLayout }: D3HierarchicalG
         const ph = panelBody.clientHeight;
         productsSvg.attr('viewBox', `0 0 ${pw} ${ph}`);
 
-        const list = products.slice(0, 600);
+        const list = products;
+        
+        // Create root group for zoom/pan
+        const productsRoot = productsSvg.append('g').attr('class', 'products-root');
+        
+        // Build P1-P1 links from product bucket relationships
+        const p1Links: any[] = [];
+        const p1Map = new Map();
+        list.forEach((p: any) => {
+          if (p.bucket_id !== undefined) {
+            if (!p1Map.has(p.bucket_id)) {
+              p1Map.set(p.bucket_id, []);
+            }
+            p1Map.get(p.bucket_id).push(p);
+          }
+        });
+        
+        // Create links between products in the same bucket
+        p1Map.forEach((products: any[]) => {
+          for (let i = 0; i < products.length; i++) {
+            for (let j = i + 1; j < products.length; j++) {
+              p1Links.push({ source: products[i], target: products[j] });
+            }
+          }
+        });
 
         const sim = d3.forceSimulation(list)
-          .force('charge', d3.forceManyBody().strength(-20))
+          .force('charge', d3.forceManyBody().strength(-30))
           .force('center', d3.forceCenter(pw / 2, ph / 2))
           .force('collision', d3.forceCollide().radius(18))
+          .force('link', d3.forceLink(p1Links).distance(40).strength(0.5))
           .on('tick', ticked);
+        
+        // Render P1-P1 links
+        const linkG = productsRoot.append('g')
+          .attr('class', 'p1-links')
+          .selectAll('line')
+          .data(p1Links)
+          .join('line')
+          .attr('stroke', '#4a90e2')
+          .attr('stroke-opacity', 0.6)
+          .attr('stroke-width', 2);
 
-        const nodeG = productsSvg.append('g')
+        const nodeG = productsRoot.append('g')
           .selectAll('g.prod')
           .data(list, (d: any) => d.id)
           .enter()
@@ -365,8 +413,22 @@ export function D3HierarchicalGraph({ onClose, onSwitchLayout }: D3HierarchicalG
           .text((d: any) => d.name);
 
         function ticked() {
+          linkG
+            .attr('x1', (d: any) => d.source.x)
+            .attr('y1', (d: any) => d.source.y)
+            .attr('x2', (d: any) => d.target.x)
+            .attr('y2', (d: any) => d.target.y);
           nodeG.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
         }
+        
+        // Add zoom/pan to products view
+        const productsZoom = d3.zoom()
+          .scaleExtent([0.3, 4])
+          .on('zoom', (event: any) => {
+            productsRoot.attr('transform', event.transform);
+          });
+        
+        productsSvg.call(productsZoom as any);
 
         function drag(simulation: any) {
           function dragstarted(event: any, d: any) {

@@ -149,7 +149,7 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
       const clusterNode = clusterGroup.select('circle.cluster');
 
       function ellipseRadiiScale() {
-        return 55;
+        return 80;
       }
 
       const ellipses = ellipseLayer
@@ -163,8 +163,12 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
         .attr('ry', (c: any) => c.eig2 * ellipseRadiiScale())
         .attr('transform', (c: any) => `translate(${c.x},${c.y}) rotate(${c.angle_deg || 0}) translate(${-c.x},${-c.y})`)
         .attr('stroke', (c: any) => color(c.aisle_name) as string)
-        .attr('fill', 'rgba(0,0,0,0.05)')
-        .attr('stroke-width', 1)
+        .attr('fill', (c: any) => {
+          const col = d3.color(color(c.aisle_name) as string);
+          return col ? col.copy({ opacity: 0.12 }).toString() : 'rgba(0,0,0,0.12)';
+        })
+        .attr('stroke-width', 2.5)
+        .attr('stroke-dasharray', '8,4')
         .style('pointer-events', 'none');
 
       function computeBounds() {
@@ -203,20 +207,36 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
       svg.call(zoom as any);
 
       d3.select(container).select('#fit-btn').on('click', () => fitView(true));
-
-      // Ellipse toggle
-      const ellipseToggle = d3.select(container).select('#ellipse-toggle');
-      ellipseToggle.on('change', function () {
-        const show = (this as HTMLInputElement).checked;
-        ellipses.classed('hidden', !show);
+      
+      // Cluster filter dropdown
+      const clusterFilter = d3.select(container).select('#cluster-filter');
+      clusterFilter.on('change', function () {
+        const selected = (this as HTMLSelectElement).value;
+        if (selected === 'all') {
+          // Show all clusters and ellipses normally
+          clusterGroup.style('opacity', 1);
+          ellipses.style('opacity', 1).attr('stroke-width', 1);
+        } else {
+          const clusterId = parseInt(selected);
+          // Dim non-selected clusters
+          clusterGroup.style('opacity', (d: any) => clusterNumber(d) == clusterId ? 1 : 0.15);
+          // Highlight selected ellipse
+          ellipses
+            .style('opacity', (d: any) => clusterNumber(d) == clusterId ? 1 : 0.1)
+            .attr('stroke-width', (d: any) => clusterNumber(d) == clusterId ? 3 : 1);
+          
+          // Focus on selected cluster
+          const targetCluster = clusters.find((c: any) => clusterNumber(c) == clusterId);
+          if (targetCluster) {
+            focusNode(targetCluster);
+          }
+        }
       });
 
       let clusterSim: any = null;
 
       function activateGmmLayout() {
-        const show = ellipseToggle.node() ? (ellipseToggle.node() as HTMLInputElement).checked : true;
         ellipses
-          .classed('hidden', !show)
           .attr('cx', (c: any) => c.x)
           .attr('cy', (c: any) => c.y)
           .attr('rx', (c: any) => c.eig1 * ellipseRadiiScale())
@@ -357,17 +377,21 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
         return isNaN(num) ? cluster.name : num;
       }
 
-      function getClusterProducts(cluster: any) {
+      function getClusterBuckets(cluster: any) {
         const cid = parseClusterId(cluster);
-        return graph.drilldown.cluster_to_products[cid] || graph.drilldown.cluster_to_products[String(cid)] || [];
+        const items = graph.drilldown.cluster_to_products[cid] || graph.drilldown.cluster_to_products[String(cid)] || [];
+        
+        // Items are already P1 buckets, not individual products
+        return items.filter((item: any) => item.type === 'P1_Bucket');
       }
 
       function openClusterPanel(cluster: any) {
         clusterNode.classed('highlight', (c: any) => c === cluster);
-        const products = getClusterProducts(cluster);
-        panelTitle.text(`${cluster.name} – Products (${products.length})`);
+        const buckets = getClusterBuckets(cluster);
+        const aisleNames = cluster.aisle_name || 'Unknown Aisle';
+        panelTitle.text(`${cluster.name} – ${aisleNames} – P1 Buckets (${buckets.length})`);
         overlay.style('display', 'flex');
-        renderProducts(products, cluster);
+        renderBuckets(buckets, cluster);
       }
 
       function closePanel() {
@@ -377,72 +401,95 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
         hideTooltip();
       }
 
-      function renderProducts(products: any[], cluster: any) {
+      function renderBuckets(buckets: any[], cluster: any) {
         productsSvg.selectAll('*').remove();
         const panelBody = container.querySelector('#panel-body') as HTMLElement;
         const pw = panelBody.clientWidth;
         const ph = panelBody.clientHeight;
         productsSvg.attr('viewBox', `0 0 ${pw} ${ph}`);
 
-        const list = products.slice(0, 600);
+        // Create root group for zoom/pan
+        const productsRoot = productsSvg.append('g').attr('class', 'products-root');
+        
+        // Position buckets in elliptical layout
+        const centerX = pw / 2;
+        const centerY = ph / 2;
+        const radiusX = Math.min(pw, ph) * 0.3;
+        const radiusY = Math.min(pw, ph) * 0.2;
+        
+        buckets.forEach((bucket: any, i: number) => {
+          const angle = (i / buckets.length) * 2 * Math.PI;
+          bucket.x = centerX + radiusX * Math.cos(angle);
+          bucket.y = centerY + radiusY * Math.sin(angle);
+        });
+        
+        // Create links between all bucket pairs (P1-P1 edges)
+        const p1Links: any[] = [];
+        for (let i = 0; i < buckets.length; i++) {
+          for (let j = i + 1; j < buckets.length; j++) {
+            p1Links.push({ source: buckets[i], target: buckets[j] });
+          }
+        }
+        
+        // Render P1-P1 links
+        const linkG = productsRoot.append('g')
+          .attr('class', 'p1-links')
+          .selectAll('line')
+          .data(p1Links)
+          .join('line')
+          .attr('stroke', '#4a90e2')
+          .attr('stroke-opacity', 0.3)
+          .attr('stroke-width', 1.5)
+          .attr('x1', (d: any) => d.source.x)
+          .attr('y1', (d: any) => d.source.y)
+          .attr('x2', (d: any) => d.target.x)
+          .attr('y2', (d: any) => d.target.y);
 
-        const sim = d3
-          .forceSimulation(list)
-          .force('charge', d3.forceManyBody().strength(-20))
-          .force('center', d3.forceCenter(pw / 2, ph / 2))
-          .force('collision', d3.forceCollide().radius(18))
-          .on('tick', ticked);
-
-        const nodeG = productsSvg
+        const nodeG = productsRoot
           .append('g')
-          .selectAll('g.prod')
-          .data(list, (d: any) => d.id)
+          .selectAll('g.bucket')
+          .data(buckets)
           .enter()
           .append('g')
-          .attr('class', 'prod')
-          .call(drag(sim) as any);
+          .attr('class', 'bucket')
+          .attr('transform', (d: any) => `translate(${d.x},${d.y})`)
+          .style('cursor', 'pointer')
+          .on('mouseover', function(event: any, d: any) {
+            d3.select(this).select('circle').attr('r', 26);
+            showTooltip(event, d.name);
+          })
+          .on('mouseout', function() {
+            d3.select(this).select('circle').attr('r', 22);
+            hideTooltip();
+          });
 
         nodeG
           .append('circle')
-          .attr('class', 'product-node')
-          .attr('r', 14)
+          .attr('class', 'bucket-node')
+          .attr('r', 22)
           .attr('fill', cluster ? (color(cluster.aisle_name) as string) : '#888')
-          .attr('stroke', '#222')
-          .attr('stroke-width', 0.6)
-          .style('cursor', 'grab')
-          .on('mouseover', (event: any, d: any) => showTooltip(event, d.name))
-          .on('mouseout', hideTooltip);
+          .attr('stroke', '#333')
+          .attr('stroke-width', 2);
 
         nodeG
           .append('text')
-          .attr('class', 'product-label')
+          .attr('class', 'bucket-label')
           .attr('text-anchor', 'middle')
-          .attr('y', 4)
-          .style('font-size', '11px')
+          .attr('dy', '0.35em')
+          .style('font-size', '9px')
+          .style('font-weight', '600')
+          .style('fill', '#fff')
           .style('pointer-events', 'none')
-          .text((d: any) => d.name);
-
-        function ticked() {
-          nodeG.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
-        }
-
-        function drag(simulation: any) {
-          function dragstarted(event: any, d: any) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-          }
-          function dragged(event: any, d: any) {
-            d.fx = event.x;
-            d.fy = event.y;
-          }
-          function dragended(event: any, d: any) {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-          }
-          return d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended);
-        }
+          .text((_d: any, i: number) => i + 1);
+        
+        // Add zoom/pan to buckets view
+        const productsZoom = d3.zoom()
+          .scaleExtent([0.3, 4])
+          .on('zoom', (event: any) => {
+            productsRoot.attr('transform', event.transform);
+          });
+        
+        productsSvg.call(productsZoom as any);
       }
 
       function showTooltip(event: any, text: string) {
@@ -463,6 +510,20 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
       if (!clusters.some((c: any) => c.centroid_x !== undefined)) {
         searchStatus.text('GMM layout unavailable: run export_gmm_layout_json.py then refresh.');
       }
+      
+      // Populate cluster dropdown
+      const clusterSelect = container.querySelector('#cluster-filter') as HTMLSelectElement;
+      if (clusterSelect) {
+        clusters
+          .map((c: any) => ({ id: clusterNumber(c), name: c.name, aisle: c.aisle_name }))
+          .sort((a: any, b: any) => a.id - b.id)
+          .forEach((c: any) => {
+            const option = document.createElement('option');
+            option.value = c.id;
+            option.text = `${c.name} (${c.aisle})`;
+            clusterSelect.appendChild(option);
+          });
+      }
     }
 
     // Cleanup
@@ -480,19 +541,19 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
           top: 0,
           left: 0,
           right: 0,
-          height: '48px',
+          height: '60px',
           background: '#212529',
           color: '#fff',
           display: 'flex',
           alignItems: 'center',
           gap: '16px',
-          padding: '0 18px',
+          padding: '0 24px',
           fontFamily: 'system-ui, Arial, sans-serif',
           zIndex: 20,
           boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
         }}
       >
-        <div style={{ fontSize: '15px', fontWeight: '600', letterSpacing: '.5px' }}>
+        <div style={{ fontSize: '16px', fontWeight: '600', letterSpacing: '.5px' }}>
           Product Substitution – GMM Layout
         </div>
         <input
@@ -501,20 +562,34 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
           placeholder="Search aisle / cluster / product"
           style={{
             flex: 1,
-            maxWidth: '420px',
-            padding: '6px 10px',
+            maxWidth: '280px',
+            padding: '8px 12px',
             borderRadius: '4px',
             border: '1px solid #555',
             background: '#343a40',
             color: '#fff',
-            fontSize: '13px',
+            fontSize: '14px',
           }}
         />
+        <select
+          id="cluster-filter"
+          style={{
+            padding: '8px 12px',
+            borderRadius: '4px',
+            border: '1px solid #555',
+            background: '#343a40',
+            color: '#fff',
+            fontSize: '14px',
+            cursor: 'pointer',
+          }}
+        >
+          <option value="all">All Clusters</option>
+        </select>
         <button
           id="fit-btn"
           style={{
-            padding: '6px 10px',
-            fontSize: '12px',
+            padding: '8px 14px',
+            fontSize: '13px',
             border: '1px solid #888',
             borderRadius: '4px',
             background: '#fff',
@@ -528,8 +603,8 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
           <button
             onClick={() => onSwitchLayout('hierarchical')}
             style={{
-              padding: '6px 10px',
-              fontSize: '12px',
+              padding: '8px 14px',
+              fontSize: '13px',
               border: '1px solid #198754',
               borderRadius: '4px',
               background: '#198754',
@@ -540,14 +615,11 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
             Hierarchical Layout
           </button>
         )}
-        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-          <input type="checkbox" id="ellipse-toggle" defaultChecked /> Show covariance ellipses
-        </label>
         <button
           onClick={onClose}
           style={{
-            padding: '6px 10px',
-            fontSize: '12px',
+            padding: '8px 14px',
+            fontSize: '13px',
             border: '1px solid #888',
             borderRadius: '4px',
             background: '#dc3545',
@@ -557,7 +629,7 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
         >
           Close
         </button>
-        <div id="search-status" style={{ minWidth: '160px', fontSize: '12px', color: '#adb5bd' }}></div>
+        <div id="search-status" style={{ minWidth: '160px', fontSize: '13px', color: '#adb5bd' }}></div>
       </div>
 
       {/* SVG Canvas */}
@@ -568,7 +640,7 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
           height: '100vh',
           display: 'block',
           background: '#f8f9fa',
-          marginTop: '48px',
+          marginTop: '60px',
         }}
       />
 
@@ -650,7 +722,6 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
 
       <style>{`
         .highlight { stroke: #d62728 !important; stroke-width: 3px !important; }
-        .cluster-ellipse.hidden { display: none; }
       `}</style>
     </div>
   );
