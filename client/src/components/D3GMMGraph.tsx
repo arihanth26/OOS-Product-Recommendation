@@ -380,8 +380,6 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
       function getClusterBuckets(cluster: any) {
         const cid = parseClusterId(cluster);
         const items = graph.drilldown.cluster_to_products[cid] || graph.drilldown.cluster_to_products[String(cid)] || [];
-        
-        // Items are already P1 buckets, not individual products
         return items.filter((item: any) => item.type === 'P1_Bucket');
       }
 
@@ -408,60 +406,50 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
         const ph = panelBody.clientHeight;
         productsSvg.attr('viewBox', `0 0 ${pw} ${ph}`);
 
-        // Create root group for zoom/pan
+        const list = buckets;
         const productsRoot = productsSvg.append('g').attr('class', 'products-root');
-        
-        // Position buckets in elliptical layout
-        const centerX = pw / 2;
-        const centerY = ph / 2;
-        const radiusX = Math.min(pw, ph) * 0.3;
-        const radiusY = Math.min(pw, ph) * 0.2;
-        
-        buckets.forEach((bucket: any, i: number) => {
-          const angle = (i / buckets.length) * 2 * Math.PI;
-          bucket.x = centerX + radiusX * Math.cos(angle);
-          bucket.y = centerY + radiusY * Math.sin(angle);
-        });
-        
-        // Create links between all bucket pairs (P1-P1 edges)
+
+        // Build P1-P1 links: each bucket to its nearest neighbor only
         const p1Links: any[] = [];
-        for (let i = 0; i < buckets.length; i++) {
-          for (let j = i + 1; j < buckets.length; j++) {
-            p1Links.push({ source: buckets[i], target: buckets[j] });
+        list.forEach((bucket: any) => {
+          let nearest: any = null;
+          let minDist = Infinity;
+          list.forEach((other: any) => {
+            if (bucket === other) return;
+            const dx = (bucket.x || 0) - (other.x || 0);
+            const dy = (bucket.y || 0) - (other.y || 0);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < minDist) {
+              minDist = dist;
+              nearest = other;
+            }
+          });
+          if (nearest && !p1Links.some(l => 
+            (l.source === bucket && l.target === nearest) || 
+            (l.source === nearest && l.target === bucket)
+          )) {
+            p1Links.push({ source: bucket, target: nearest });
           }
-        }
-        
-        // Render P1-P1 links
-        const linkG = productsRoot.append('g')
+        });
+
+        const linkG = productsRoot
+          .append('g')
           .attr('class', 'p1-links')
           .selectAll('line')
           .data(p1Links)
           .join('line')
           .attr('stroke', '#4a90e2')
-          .attr('stroke-opacity', 0.3)
-          .attr('stroke-width', 1.5)
-          .attr('x1', (d: any) => d.source.x)
-          .attr('y1', (d: any) => d.source.y)
-          .attr('x2', (d: any) => d.target.x)
-          .attr('y2', (d: any) => d.target.y);
+          .attr('stroke-opacity', 0.6)
+          .attr('stroke-width', 2);
 
         const nodeG = productsRoot
           .append('g')
           .selectAll('g.bucket')
-          .data(buckets)
+          .data(list, (d: any) => d.id)
           .enter()
           .append('g')
           .attr('class', 'bucket')
-          .attr('transform', (d: any) => `translate(${d.x},${d.y})`)
-          .style('cursor', 'pointer')
-          .on('mouseover', function(event: any, d: any) {
-            d3.select(this).select('circle').attr('r', 26);
-            showTooltip(event, d.name);
-          })
-          .on('mouseout', function() {
-            d3.select(this).select('circle').attr('r', 22);
-            hideTooltip();
-          });
+          .call(drag as any);
 
         nodeG
           .append('circle')
@@ -469,7 +457,10 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
           .attr('r', 22)
           .attr('fill', cluster ? (color(cluster.aisle_name) as string) : '#888')
           .attr('stroke', '#333')
-          .attr('stroke-width', 2);
+          .attr('stroke-width', 2)
+          .style('cursor', 'grab')
+          .on('mouseover', (event: any, d: any) => showTooltip(event, d.name))
+          .on('mouseout', hideTooltip);
 
         nodeG
           .append('text')
@@ -481,15 +472,49 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
           .style('fill', '#fff')
           .style('pointer-events', 'none')
           .text((_d: any, i: number) => i + 1);
-        
-        // Add zoom/pan to buckets view
-        const productsZoom = d3.zoom()
+
+        const sim = d3
+          .forceSimulation(list)
+          .force('charge', d3.forceManyBody().strength(-30))
+          .force('center', d3.forceCenter(pw / 2, ph / 2))
+          .force('collision', d3.forceCollide().radius(26))
+          .force('link', d3.forceLink(p1Links).distance(80).strength(0.3))
+          .on('tick', ticked);
+
+        function ticked() {
+          linkG
+            .attr('x1', (d: any) => d.source.x)
+            .attr('y1', (d: any) => d.source.y)
+            .attr('x2', (d: any) => d.target.x)
+            .attr('y2', (d: any) => d.target.y);
+          nodeG.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
+        }
+
+        const productsZoom = d3
+          .zoom()
           .scaleExtent([0.3, 4])
           .on('zoom', (event: any) => {
             productsRoot.attr('transform', event.transform);
           });
-        
         productsSvg.call(productsZoom as any);
+
+        function drag(simulation: any) {
+          function dragstarted(event: any, d: any) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+          }
+          function dragged(event: any, d: any) {
+            d.fx = event.x;
+            d.fy = event.y;
+          }
+          function dragended(event: any, d: any) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+          }
+          return d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended);
+        }
       }
 
       function showTooltip(event: any, text: string) {
@@ -541,7 +566,7 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
           top: 0,
           left: 0,
           right: 0,
-          height: '60px',
+          height: '70px',
           background: '#212529',
           color: '#fff',
           display: 'flex',
@@ -553,8 +578,13 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
           boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
         }}
       >
-        <div style={{ fontSize: '16px', fontWeight: '600', letterSpacing: '.5px' }}>
-          Product Substitution – GMM Layout
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '320px' }}>
+          <div style={{ fontSize: '16px', fontWeight: '600', letterSpacing: '.5px', lineHeight: '1.2' }}>
+            Product Substitution – GMM Layout
+          </div>
+          <div style={{ fontSize: '11px', color: '#adb5bd', fontWeight: '400', lineHeight: '1.3' }}>
+            Click clusters to view P1 buckets with nearest-neighbor links
+          </div>
         </div>
         <input
           id="search-input"
@@ -640,7 +670,7 @@ export function D3GMMGraph({ onClose, onSwitchLayout }: D3GMMGraphProps) {
           height: '100vh',
           display: 'block',
           background: '#f8f9fa',
-          marginTop: '60px',
+          marginTop: '70px',
         }}
       />
 

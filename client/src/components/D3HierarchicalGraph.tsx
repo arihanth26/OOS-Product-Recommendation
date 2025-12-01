@@ -490,8 +490,13 @@ export function D3HierarchicalGraph({ onClose, onSwitchLayout }: D3HierarchicalG
         zIndex: 20,
         boxShadow: '0 2px 6px rgba(0,0,0,0.25)'
       }}>
-        <div style={{ fontSize: '15px', fontWeight: '600', letterSpacing: '.5px' }}>
-          Product Substitution Hierarchy
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div style={{ fontSize: '15px', fontWeight: '600', letterSpacing: '.5px' }}>
+            Product Substitution Hierarchy
+          </div>
+          <div style={{ fontSize: '11px', color: '#adb5bd', fontWeight: '400' }}>
+            Click clusters to view individual products
+          </div>
         </div>
         <input
           id="search-input"
