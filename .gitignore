@@ -1,4 +1,8 @@
 data/*
+!data/processed/
+data/processed/*
+!data/processed/drilldown_graph.json
+!data/processed/drilldown_graph_gmm.json
 __pycache__/
 .ipynb_checkpoints
 *.nbconvert.ipynb
@@ -11,3 +15,4 @@ logs/
 .venv/
 !data/sample_*.csv
 notebooks/artifacts/*
+node_modules
